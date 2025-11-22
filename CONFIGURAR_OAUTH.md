@@ -26,12 +26,11 @@ https://collab-henna.vercel.app
 ```
 O la URL que Vercel te haya asignado.
 
-### 4. **NEXTAUTH_SECRET** ⚠️ (NECESITAS GENERARLA)
-Genera una clave secreta con este comando:
-```bash
-openssl rand -base64 32
+### 4. **NEXTAUTH_SECRET** ✅ (YA GENERADA)
 ```
-O usa este generador online: https://generate-secret.vercel.app/32
+ja7u5ukSijQp1NdKtujh8L9oaNKN00/FFoJjzVz7XPg=
+```
+**Ya generada y lista para usar.**
 
 ### 5. **GOOGLE_CLIENT_ID** ✅ (Ya la tienes)
 ```

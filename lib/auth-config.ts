@@ -20,26 +20,36 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    async signIn(params: any) {
-      const { user } = params;
+    async signIn({ user, account, profile }) {
       // Only allow @up.edu.mx emails
       if (user?.email && !user.email.endsWith("@up.edu.mx")) {
         return false;
       }
       return true;
     },
-    async session(params: any) {
-      const { session, user } = params;
+    async session({ session, user }) {
       // With database strategy, user is passed directly from the database
-      if (session?.user && user) {
-        // Fetch the full user to get the role
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { id: true, role: true },
-        });
-        if (dbUser) {
-          (session.user as any).id = dbUser.id;
-          (session.user as any).role = dbUser.role;
+      if (session?.user) {
+        if (user) {
+          // User object is available from the database session
+          session.user.id = user.id;
+          // Fetch the full user to get the role
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { id: true, role: true },
+            });
+            if (dbUser) {
+              session.user.role = dbUser.role;
+            } else {
+              // If user not found in our User table, set default role
+              session.user.role = "STUDENT";
+            }
+          } catch (error) {
+            // If there's an error fetching user, set default role
+            console.error("Error fetching user role:", error);
+            session.user.role = "STUDENT";
+          }
         }
       }
       return session;
