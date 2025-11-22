@@ -21,14 +21,14 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: any) {
       // Only allow @up.edu.mx emails
       if (user?.email && !user.email.endsWith("@up.edu.mx")) {
         return false;
       }
       return true;
     },
-    async session({ session, user }) {
+    async session({ session, user }: any) {
       // With database strategy, user is passed directly from the database
       try {
         if (session?.user && user) {
