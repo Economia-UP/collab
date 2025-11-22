@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { requireAuth, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { validateOverleafUrl, parseOverleafUrl, fetchProjectMetadata } from "@/lib/overleaf";
@@ -83,7 +84,7 @@ export async function disconnectOverleafProject(projectId: string) {
     data: {
       overleafProjectUrl: null,
       overleafProjectId: null,
-      overleafProjectData: null,
+      overleafProjectData: Prisma.JsonNull,
     },
   });
 

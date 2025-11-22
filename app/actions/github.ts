@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { requireAuth, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { validateGitHubRepo, parseGitHubUrl, fetchRepoMetadata } from "@/lib/github";
@@ -89,7 +90,7 @@ export async function disconnectGitHubRepo(projectId: string) {
       githubRepoUrl: null,
       githubRepoName: null,
       githubRepoOwner: null,
-      githubRepoData: null,
+      githubRepoData: Prisma.JsonNull,
     },
   });
 
