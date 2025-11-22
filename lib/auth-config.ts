@@ -20,14 +20,14 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: { user: any; account: any; profile: any }) {
       // Only allow @up.edu.mx emails
       if (user.email && !user.email.endsWith("@up.edu.mx")) {
         return false;
       }
       return true;
     },
-    async session({ session, user }) {
+    async session({ session, user }: { session: any; user: any }) {
       // With database strategy, user is passed directly from the database
       if (session.user && user) {
         // Fetch the full user to get the role
