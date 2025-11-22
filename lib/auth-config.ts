@@ -50,9 +50,9 @@ export const authConfig = {
     error: "/auth/error",
   },
   session: {
-    strategy: "database",
+    strategy: "database" as const,
   },
-};
+} as const;
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig as any);
 
