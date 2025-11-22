@@ -5,8 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { Adapter } from "next-auth/adapters";
 import { Role } from "@prisma/client";
 
+// NextAuth v5 uses AUTH_SECRET, but we support both for compatibility
+const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+if (!authSecret) {
+  console.error("⚠️ AUTH_SECRET or NEXTAUTH_SECRET is missing!");
+}
+
 export const authConfig = {
   adapter: PrismaAdapter(prisma) as Adapter,
+  secret: authSecret,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -16,17 +24,35 @@ export const authConfig = {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
+          scope: "openid email profile",
         },
       },
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }: any) {
-      // Only allow @up.edu.mx emails
-      if (user?.email && !user.email.endsWith("@up.edu.mx")) {
+      try {
+        // Log for debugging
+        console.log("🔐 signIn callback - user email:", user?.email);
+        
+        // Only allow @up.edu.mx emails
+        if (user?.email) {
+          const email = user.email.toLowerCase();
+          if (!email.endsWith("@up.edu.mx")) {
+            console.log("❌ Access denied - email does not end with @up.edu.mx:", email);
+            return false;
+          }
+          console.log("✅ Access granted - email is @up.edu.mx:", email);
+          return true;
+        }
+        
+        // If no email, deny access
+        console.log("❌ Access denied - no email provided");
+        return false;
+      } catch (error) {
+        console.error("❌ Error in signIn callback:", error);
         return false;
       }
-      return true;
     },
     async session({ session, user }: any) {
       // With database strategy, user is passed directly from the database
