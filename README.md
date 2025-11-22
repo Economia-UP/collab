@@ -2,6 +2,8 @@
 
 Plataforma de colaboración para proyectos de investigación de la Universidad Panamericana.
 
+<!-- Redeploy trigger -->
+
 ## Características
 
 - 🔐 Autenticación con Google OAuth (solo @up.edu.mx)
