@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +8,8 @@ import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { Button } from "@/components/ui/button";
 import { Github, FileText, Users, MessageSquare } from "lucide-react";
 import { ProjectStatus, Visibility } from "@prisma/client";
+import { motion } from "framer-motion";
+import { scaleIn } from "@/lib/animations";
 
 interface ProjectCardProps {
   project: {
@@ -38,7 +42,12 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, isMember, onJoinClick }: ProjectCardProps) {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <motion.div
+      {...scaleIn}
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card>
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg line-clamp-2">{project.title}</CardTitle>
@@ -102,6 +111,7 @@ export function ProjectCard({ project, isMember, onJoinClick }: ProjectCardProps
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }
 

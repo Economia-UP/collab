@@ -30,7 +30,6 @@ export async function getAuthUser() {
   // Get or create user in database
   let dbUser = await prisma.user.findUnique({
     where: { clerkId: userId },
-    include: { profile: true },
   });
 
   if (!dbUser) {
@@ -45,7 +44,6 @@ export async function getAuthUser() {
         role: Role.STUDENT, // Default role
         image: clerkUser.imageUrl,
       },
-      include: { profile: true },
     });
   } else {
     // Update user info from Clerk
@@ -58,7 +56,6 @@ export async function getAuthUser() {
           : clerkUser.firstName || email || dbUser.name,
         image: clerkUser.imageUrl || dbUser.image,
       },
-      include: { profile: true },
     });
   }
 

@@ -1,16 +1,22 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
+  <motion.div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-xl border bg-card text-card-foreground shadow-soft transition-smooth",
+      "hover:shadow-premium hover:-translate-y-1",
       className
     )}
+    whileHover={{ y: -4 }}
+    transition={{ duration: 0.2, ease: "easeOut" }}
     {...props}
   />
 ));

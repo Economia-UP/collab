@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { fadeInUp } from "@/lib/animations";
 import {
   Select,
   SelectContent,
@@ -88,8 +90,9 @@ export function ProjectsFilter() {
   };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
+    <motion.div {...fadeInUp}>
+      <Card>
+        <CardContent className="pt-6">
         <div className="space-y-4">
           {/* Search */}
           <div className="relative">
@@ -230,6 +233,7 @@ export function ProjectsFilter() {
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }
 

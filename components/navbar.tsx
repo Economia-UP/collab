@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +13,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/sign-out-button";
+import { motion } from "framer-motion";
+import { fadeInDown } from "@/lib/animations";
 
 interface NavbarProps {
   session?: {
@@ -27,13 +31,22 @@ interface NavbarProps {
 export function Navbar({ session }: NavbarProps) {
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <motion.nav 
+      {...fadeInDown}
+      className="sticky top-0 z-50 w-full border-b glass shadow-soft"
+    >
       <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
+        <motion.div 
+          className="flex items-center gap-6"
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+        >
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-primary">Research Hub UP</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-dorado to-azul bg-clip-text text-transparent">
+              Research Hub UP
+            </span>
           </Link>
-        </div>
+        </motion.div>
 
         <div className="flex items-center gap-4">
           {session ? (
@@ -76,12 +89,12 @@ export function Navbar({ session }: NavbarProps) {
               </DropdownMenu>
             </>
           ) : (
-            <Button asChild>
-              <Link href="/auth/signin">Iniciar sesión</Link>
+            <Button asChild className="gradient-dorado hover:opacity-90 transition-smooth">
+              <Link href="/auth/sign-in">Iniciar sesión</Link>
             </Button>
           )}
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

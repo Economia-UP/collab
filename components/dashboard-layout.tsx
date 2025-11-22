@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { motion, AnimatePresence } from "framer-motion";
+import { fadeIn } from "@/lib/animations";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -41,9 +43,12 @@ export function DashboardLayout({ children, session }: DashboardLayoutProps) {
         </Sheet>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        <motion.main
+          {...fadeIn}
+          className="flex-1 overflow-y-auto"
+        >
           <div className="container mx-auto p-6">{children}</div>
-        </main>
+        </motion.main>
       </div>
     </div>
   );

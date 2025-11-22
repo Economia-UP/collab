@@ -10,20 +10,63 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221 83% 25%;
+    /* Universidad Panamericana colors */
+    --primary: 38 45% 54%; /* dorado #B9975B */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 214 100% 22%; /* azul #002D72 */
+    --secondary-foreground: 0 0% 100%;
+    --accent: 339 65% 28%; /* vino #7a1a37 */
+    --accent-foreground: 0 0% 100%;
+    --success: 164 44% 22%; /* verde #215347 */
+    --success-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 348 75% 30%;
-    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+  }
+}
+
+@layer utilities {
+  /* Premium gradients using UP colors */
+  .gradient-dorado {
+    background: linear-gradient(135deg, #B9975B 0%, #D4B87A 100%);
+  }
+  
+  .gradient-azul {
+    background: linear-gradient(135deg, #002D72 0%, #1A4A8C 100%);
+  }
+  
+  .gradient-vino {
+    background: linear-gradient(135deg, #7a1a37 0%, #9D2A4A 100%);
+  }
+  
+  .gradient-verde {
+    background: linear-gradient(135deg, #215347 0%, #2D6B5C 100%);
+  }
+  
+  .gradient-institutional {
+    background: linear-gradient(135deg, #B9975B 0%, #002D72 50%, #7a1a37 100%);
+  }
+  
+  /* Subtle backdrop blur */
+  .glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Premium shadow */
+  .shadow-premium {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -33,6 +76,32 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Premium spacing scale */
+  .space-premium {
+    @apply space-y-8;
+  }
+  
+  /* Refined border radius */
+  .rounded-premium {
+    @apply rounded-xl;
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

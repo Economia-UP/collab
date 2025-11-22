@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Roboto_Condensed } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
 import { ClerkProvider } from "@clerk/nextjs";
 
-const robotoCondensed = Roboto_Condensed({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["300", "400", "700"],
-  variable: "--font-roboto-condensed",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="es" className={robotoCondensed.variable}>
+      <html lang="es" className={spaceGrotesk.variable}>
         <body className="font-sans antialiased">
           <Providers>
             {children}
