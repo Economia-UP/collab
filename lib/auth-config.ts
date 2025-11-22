@@ -29,29 +29,43 @@ export const authConfig = {
     },
     async session({ session, user }) {
       // With database strategy, user is passed directly from the database
-      if (session?.user) {
-        if (user) {
+      try {
+        if (session?.user && user) {
           // User object is available from the database session
           session.user.id = user.id;
+          
           // Fetch the full user to get the role
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, role: true },
+          });
+          
+          if (dbUser) {
+            session.user.role = dbUser.role;
+          } else {
+            // If user not found in our User table, set default role
+            session.user.role = "STUDENT";
+          }
+        } else if (session?.user && session.user.email) {
+          // Fallback: if user object is not available, try to find by email
           try {
             const dbUser = await prisma.user.findUnique({
-              where: { id: user.id },
+              where: { email: session.user.email! },
               select: { id: true, role: true },
             });
             if (dbUser) {
+              session.user.id = dbUser.id;
               session.user.role = dbUser.role;
-            } else {
-              // If user not found in our User table, set default role
-              session.user.role = "STUDENT";
             }
           } catch (error) {
-            // If there's an error fetching user, set default role
-            console.error("Error fetching user role:", error);
-            session.user.role = "STUDENT";
+            console.error("Error fetching user by email:", error);
           }
         }
+      } catch (error) {
+        // If there's any error, log it but don't break the session
+        console.error("Error in session callback:", error);
       }
+      
       return session;
     },
   },
