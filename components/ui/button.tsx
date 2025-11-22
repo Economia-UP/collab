@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { buttonHover, buttonTap } from "@/lib/animations";
 
 const buttonVariants = cva(
@@ -38,7 +38,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<HTMLMotionProps<"button">, "onDrag" | "onDragStart" | "onDragEnd">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
