@@ -3,7 +3,7 @@ import { ProjectCard } from "@/components/project-card";
 import { getProjects } from "@/app/actions/projects";
 import { ProjectStatus, Visibility } from "@prisma/client";
 import { ProjectsFilter } from "@/components/projects-filter";
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 
 export default async function ProjectsPage({
   searchParams,

@@ -4,7 +4,7 @@ import { getProjectById } from "@/app/actions/projects";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/auth";
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 
 export default async function EditProjectPage({
   params,

@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { ProjectForm } from "@/components/project-form";
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 
 export default async function NewProjectPage() {
   const session = await auth();

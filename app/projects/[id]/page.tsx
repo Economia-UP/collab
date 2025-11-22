@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 
 export default async function ProjectDetailPage({
   params,

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/settings-form";
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 
 export default async function SettingsPage() {
   const session = await requireAuth();

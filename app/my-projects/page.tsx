@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import Link from "next/link";
 import { FolderKanban, Users } from "lucide-react";
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 
 export default async function MyProjectsPage() {
   const session = await requireAuth();

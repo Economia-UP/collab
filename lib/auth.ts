@@ -1,4 +1,4 @@
-import { auth } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/lib/auth-config";
 import { Role } from "@prisma/client";
 
 export async function getServerSession() {

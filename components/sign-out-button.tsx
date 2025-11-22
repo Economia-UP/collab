@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut } from "@/app/api/auth/[...nextauth]/route";
+import { signOut } from "@/lib/auth-config";
 import { Button } from "@/components/ui/button";
 
 export function SignOutButton() {
