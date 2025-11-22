@@ -4,6 +4,7 @@ import { getProjectById } from "@/app/actions/projects";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/auth";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function EditProjectPage({
   params,
@@ -15,6 +16,8 @@ export default async function EditProjectPage({
     redirect("/auth/signin");
   }
 
+  const authSession = await auth();
+
   try {
     const project = await getProjectById(params.id);
     
@@ -24,7 +27,7 @@ export default async function EditProjectPage({
     }
 
     return (
-      <DashboardLayout>
+      <DashboardLayout session={authSession}>
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Editar Proyecto</h1>

@@ -3,6 +3,7 @@ import { ProjectCard } from "@/components/project-card";
 import { getProjects } from "@/app/actions/projects";
 import { ProjectStatus, Visibility } from "@prisma/client";
 import { ProjectsFilter } from "@/components/projects-filter";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function ProjectsPage({
   searchParams,
@@ -24,10 +25,11 @@ export default async function ProjectsPage({
     hasOverleaf: searchParams.hasOverleaf === "true",
   };
 
+  const session = await auth();
   const projects = await getProjects(filters);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout session={session}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Proyectos</h1>

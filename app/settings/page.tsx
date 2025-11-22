@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/settings-form";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function SettingsPage() {
   const session = await requireAuth();
@@ -19,8 +20,10 @@ export default async function SettingsPage() {
     return null;
   }
 
+  const authSession = await auth();
+
   return (
-    <DashboardLayout>
+    <DashboardLayout session={authSession}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>

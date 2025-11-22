@@ -1,9 +1,8 @@
-import { getServerSession as nextAuthGetServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 import { Role } from "@prisma/client";
 
 export async function getServerSession() {
-  return await nextAuthGetServerSession(authOptions);
+  return await auth();
 }
 
 export async function requireAuth() {

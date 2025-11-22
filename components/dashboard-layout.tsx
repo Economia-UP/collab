@@ -7,12 +7,17 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  session?: any;
+}
+
+export function DashboardLayout({ children, session }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
+      <Navbar session={session} />
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block">

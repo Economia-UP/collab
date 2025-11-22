@@ -1,6 +1,4 @@
-"use client";
-
-import { signIn } from "next-auth/react";
+import { signIn } from "@/app/api/auth/[...nextauth]/route";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -17,13 +15,14 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-            className="w-full"
-            size="lg"
-          >
-            Continuar con Google (UP)
-          </Button>
+          <form action={async () => {
+            "use server";
+            await signIn("google", { redirectTo: "/dashboard" });
+          }}>
+            <Button type="submit" className="w-full" size="lg">
+              Continuar con Google (UP)
+            </Button>
+          </form>
           <p className="mt-4 text-sm text-center text-muted-foreground">
             Solo usuarios con correo @up.edu.mx pueden acceder
           </p>
@@ -32,4 +31,3 @@ export default function SignInPage() {
     </div>
   );
 }
-

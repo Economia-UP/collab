@@ -1,9 +1,11 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { ProjectForm } from "@/components/project-form";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
+  const session = await auth();
   return (
-    <DashboardLayout>
+    <DashboardLayout session={session}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Crear Nuevo Proyecto</h1>

@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 import { Github, FileText, Users } from "lucide-react";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
   const sampleProjects = [
     {
       id: 1,
@@ -54,7 +56,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
+      <Navbar session={session} />
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 py-20">

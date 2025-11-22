@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,10 +10,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Menu } from "lucide-react";
+import { SignOutButton } from "@/components/sign-out-button";
 
-export function Navbar() {
-  const { data: session } = useSession();
+interface NavbarProps {
+  session?: {
+    user?: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      role?: string;
+    };
+  } | null;
+}
+
+export function Navbar({ session }: NavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -61,8 +69,8 @@ export function Navbar() {
                     <Link href="/settings">Configuración</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
-                    Cerrar sesión
+                  <DropdownMenuItem asChild>
+                    <SignOutButton />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -77,4 +85,3 @@ export function Navbar() {
     </nav>
   );
 }
-

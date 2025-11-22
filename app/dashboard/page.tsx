@@ -7,8 +7,10 @@ import { FolderKanban, Users, CheckSquare, Plus, Search, ListTodo } from "lucide
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function DashboardPage() {
+  const session = await auth();
   const stats = await getDashboardStats();
   const activities = await getRecentActivity();
 
@@ -28,7 +30,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout session={session}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>

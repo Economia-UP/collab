@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { auth } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function ProjectDetailPage({
   params,
@@ -12,6 +13,7 @@ export default async function ProjectDetailPage({
   params: { id: string };
 }) {
   const session = await getServerSession();
+  const authSession = await auth();
   
   try {
     const project = await getProjectById(params.id);
@@ -22,7 +24,7 @@ export default async function ProjectDetailPage({
     const isAdmin = session?.user?.role === "ADMIN";
 
     return (
-      <DashboardLayout>
+      <DashboardLayout session={authSession}>
         <div className="space-y-6">
           <div className="flex items-start justify-between">
             <div>

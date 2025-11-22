@@ -1,11 +1,10 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
+import { Adapter } from "next-auth/adapters";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     GoogleProvider({
@@ -29,9 +28,11 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async session({ session, user }) {
+      // With database strategy, user is passed directly from the database
       if (session.user && user) {
+        // Fetch the full user to get the role
         const dbUser = await prisma.user.findUnique({
-          where: { email: session.user.email! },
+          where: { id: user.id },
           select: { id: true, role: true },
         });
         if (dbUser) {
@@ -41,13 +42,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
   },
   pages: {
     signIn: "/auth/signin",
@@ -56,9 +50,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "database",
   },
-};
+});
 
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };
-
+export const { GET, POST } = handlers;
