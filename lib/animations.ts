@@ -85,7 +85,7 @@ export const scaleIn: Variants = {
 
 export const scaleOnHover = {
   scale: 1.02,
-  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
+  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
 };
 
 // Spring animations (bouncy but refined)
@@ -154,7 +154,7 @@ export const staggerItem: Variants = {
 // Card hover animations
 export const cardHover = {
   y: -4,
-  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
+  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
 };
 
 export const cardTap = {
@@ -165,7 +165,7 @@ export const cardTap = {
 // Button animations
 export const buttonHover = {
   scale: 1.05,
-  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
+  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
 };
 
 export const buttonTap = {
