@@ -1,113 +1,93 @@
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+// Clerk authentication configuration
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { Adapter } from "next-auth/adapters";
 import { Role } from "@prisma/client";
 
-// NextAuth v5 uses AUTH_SECRET, but we support both for compatibility
-const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+// Re-export Clerk's auth function
+export { auth, currentUser } from "@clerk/nextjs/server";
 
-if (!authSecret) {
-  console.error("⚠️ AUTH_SECRET or NEXTAUTH_SECRET is missing!");
+// Helper to get user with role from database
+export async function getAuthUser() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    return null;
+  }
+
+  // Get user from Clerk
+  const clerkUser = await currentUser();
+  
+  if (!clerkUser) {
+    return null;
+  }
+
+  // Check if email is @up.edu.mx
+  const email = clerkUser.emailAddresses[0]?.emailAddress;
+  if (!email || !email.endsWith("@up.edu.mx")) {
+    return null;
+  }
+
+  // Get or create user in database
+  let dbUser = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    include: { profile: true },
+  });
+
+  if (!dbUser) {
+    // Create user in database
+    dbUser = await prisma.user.create({
+      data: {
+        clerkId: userId,
+        email: email,
+        name: clerkUser.firstName && clerkUser.lastName
+          ? `${clerkUser.firstName} ${clerkUser.lastName}`
+          : clerkUser.firstName || clerkUser.emailAddresses[0]?.emailAddress || "Usuario",
+        role: Role.STUDENT, // Default role
+        image: clerkUser.imageUrl,
+      },
+      include: { profile: true },
+    });
+  } else {
+    // Update user info from Clerk
+    dbUser = await prisma.user.update({
+      where: { id: dbUser.id },
+      data: {
+        email: email,
+        name: clerkUser.firstName && clerkUser.lastName
+          ? `${clerkUser.firstName} ${clerkUser.lastName}`
+          : clerkUser.firstName || email || dbUser.name,
+        image: clerkUser.imageUrl || dbUser.image,
+      },
+      include: { profile: true },
+    });
+  }
+
+  return {
+    id: dbUser.id,
+    clerkId: userId,
+    email: dbUser.email,
+    name: dbUser.name,
+    image: dbUser.image,
+    role: dbUser.role,
+    user: dbUser,
+  };
 }
 
-export const authConfig = {
-  adapter: PrismaAdapter(prisma) as Adapter,
-  secret: authSecret,
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-          scope: "openid email profile",
-        },
-      },
-    }),
-  ],
-  callbacks: {
-    async signIn({ user, account, profile }: any) {
-      try {
-        // Log for debugging
-        console.log("🔐 signIn callback - user email:", user?.email);
-        
-        // Only allow @up.edu.mx emails
-        if (user?.email) {
-          const email = user.email.toLowerCase();
-          if (!email.endsWith("@up.edu.mx")) {
-            console.log("❌ Access denied - email does not end with @up.edu.mx:", email);
-            return false;
-          }
-          console.log("✅ Access granted - email is @up.edu.mx:", email);
-          return true;
-        }
-        
-        // If no email, deny access
-        console.log("❌ Access denied - no email provided");
-        return false;
-      } catch (error) {
-        console.error("❌ Error in signIn callback:", error);
-        return false;
-      }
-    },
-    async session({ session, user }: any) {
-      // With database strategy, user is passed directly from the database
-      try {
-        if (session?.user && user) {
-          // User object is available from the database session
-          session.user.id = user.id;
-          
-          // Fetch the full user to get the role
-          const dbUser = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { id: true, role: true },
-          });
-          
-          if (dbUser) {
-            session.user.role = dbUser.role;
-          } else {
-            // If user not found in our User table, set default role
-            session.user.role = Role.STUDENT;
-          }
-        } else if (session?.user && session.user.email) {
-          // Fallback: if user object is not available, try to find by email
-          try {
-            const dbUser = await prisma.user.findUnique({
-              where: { email: session.user.email! },
-              select: { id: true, role: true },
-            });
-            if (dbUser) {
-              session.user.id = dbUser.id;
-              session.user.role = dbUser.role;
-            } else {
-              // If user not found, we still need to set an id
-              // This shouldn't happen in normal flow, but handle it gracefully
-              console.warn("User not found in database for email:", session.user.email);
-            }
-          } catch (error) {
-            console.error("Error fetching user by email:", error);
-          }
-        }
-      } catch (error) {
-        // If there's any error, log it but don't break the session
-        console.error("Error in session callback:", error);
-      }
-      
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
-  session: {
-    strategy: "database" as const,
-  },
-} as const;
+// Helper to get session (compatible with old NextAuth interface)
+export async function getSession() {
+  const authUser = await getAuthUser();
+  
+  if (!authUser) {
+    return null;
+  }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig as any);
-
+  return {
+    user: {
+      id: authUser.id,
+      email: authUser.email,
+      name: authUser.name,
+      image: authUser.image,
+      role: authUser.role,
+    },
+  };
+}

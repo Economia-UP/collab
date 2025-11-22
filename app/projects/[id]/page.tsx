@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 
 export default async function ProjectDetailPage({
   params,
@@ -13,7 +13,7 @@ export default async function ProjectDetailPage({
   params: { id: string };
 }) {
   const session = await getServerSession();
-  const authSession = await auth();
+  const authSession = await getSession();
   
   try {
     const project = await getProjectById(params.id);

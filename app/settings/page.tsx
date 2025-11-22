@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "@/components/settings-form";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 
 export default async function SettingsPage() {
   const session = await requireAuth();
@@ -20,7 +20,7 @@ export default async function SettingsPage() {
     return null;
   }
 
-  const authSession = await auth();
+  const authSession = await getSession();
 
   return (
     <DashboardLayout session={authSession}>

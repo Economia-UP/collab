@@ -3,6 +3,7 @@ import { Roboto_Condensed } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const robotoCondensed = Roboto_Condensed({
   subsets: ["latin"],
@@ -21,14 +22,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={robotoCondensed.variable}>
-      <body className="font-sans antialiased">
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="es" className={robotoCondensed.variable}>
+        <body className="font-sans antialiased">
+          <Providers>
+            {children}
+            <Toaster />
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
 

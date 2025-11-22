@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/navbar";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 import { Github, FileText, Users } from "lucide-react";
 
 export default async function HomePage() {
-  const session = await auth();
+  const session = await getSession();
   const sampleProjects = [
     {
       id: 1,
@@ -71,7 +71,7 @@ export default async function HomePage() {
               </p>
               <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
-                  <Link href="/auth/signin">
+                  <Link href="/auth/sign-in">
                     Inicia sesión con tu correo @up.edu.mx
                   </Link>
                 </Button>

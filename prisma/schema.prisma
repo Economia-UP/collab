@@ -88,6 +88,7 @@ enum ActivityType {
 
 model User {
   id                String    @id @default(cuid())
+  clerkId           String?   @unique // Clerk user ID
   name              String?
   email              String    @unique
   emailVerified     DateTime?
@@ -99,7 +100,7 @@ model User {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
-  // NextAuth relations
+  // NextAuth relations (deprecated, keeping for migration)
   accounts          Account[]
   sessions          Session[]
 

@@ -7,10 +7,10 @@ import { FolderKanban, Users, CheckSquare, Plus, Search, ListTodo } from "lucide
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const session = await getSession();
   const stats = await getDashboardStats();
   const activities = await getRecentActivity();
 

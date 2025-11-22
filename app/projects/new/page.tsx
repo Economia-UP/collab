@@ -1,9 +1,9 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { ProjectForm } from "@/components/project-form";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 
 export default async function NewProjectPage() {
-  const session = await auth();
+  const session = await getSession();
   return (
     <DashboardLayout session={session}>
       <div className="space-y-6">

@@ -3,7 +3,7 @@ import { ProjectCard } from "@/components/project-card";
 import { getProjects } from "@/app/actions/projects";
 import { ProjectStatus, Visibility } from "@prisma/client";
 import { ProjectsFilter } from "@/components/projects-filter";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 
 export default async function ProjectsPage({
   searchParams,
@@ -25,7 +25,7 @@ export default async function ProjectsPage({
     hasOverleaf: searchParams.hasOverleaf === "true",
   };
 
-  const session = await auth();
+  const session = await getSession();
   const projects = await getProjects(filters);
 
   return (

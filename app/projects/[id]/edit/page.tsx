@@ -4,7 +4,7 @@ import { getProjectById } from "@/app/actions/projects";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/auth";
-import { auth } from "@/lib/auth-config";
+import { getSession } from "@/lib/auth-config";
 
 export default async function EditProjectPage({
   params,
@@ -13,10 +13,10 @@ export default async function EditProjectPage({
 }) {
   const session = await getServerSession();
   if (!session) {
-    redirect("/auth/signin");
+    redirect("/auth/sign-in");
   }
 
-  const authSession = await auth();
+  const authSession = await getSession();
 
   try {
     const project = await getProjectById(params.id);

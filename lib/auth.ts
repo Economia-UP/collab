@@ -1,15 +1,21 @@
-import { auth } from "@/lib/auth-config";
+import { getAuthUser, getSession } from "@/lib/auth-config";
 import { Role } from "@prisma/client";
 
 export async function getServerSession() {
-  return await auth();
+  return await getSession();
 }
 
 export async function requireAuth() {
-  const session = await getServerSession();
+  const authUser = await getAuthUser();
+  if (!authUser) {
+    throw new Error("Unauthorized");
+  }
+  
+  const session = await getSession();
   if (!session || !session.user) {
     throw new Error("Unauthorized");
   }
+  
   return session;
 }
 
@@ -24,4 +30,3 @@ export function isProfessor(role: Role | undefined): boolean {
 export function isStudent(role: Role | undefined): boolean {
   return role === "STUDENT" || role === "PROFESSOR" || role === "ADMIN";
 }
-
