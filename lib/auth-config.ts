@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { Adapter } from "next-auth/adapters";
+import { Role } from "@prisma/client";
 
 export const authConfig = {
   adapter: PrismaAdapter(prisma) as Adapter,
@@ -44,7 +45,7 @@ export const authConfig = {
             session.user.role = dbUser.role;
           } else {
             // If user not found in our User table, set default role
-            session.user.role = "STUDENT";
+            session.user.role = Role.STUDENT;
           }
         } else if (session?.user && session.user.email) {
           // Fallback: if user object is not available, try to find by email
@@ -56,6 +57,10 @@ export const authConfig = {
             if (dbUser) {
               session.user.id = dbUser.id;
               session.user.role = dbUser.role;
+            } else {
+              // If user not found, we still need to set an id
+              // This shouldn't happen in normal flow, but handle it gracefully
+              console.warn("User not found in database for email:", session.user.email);
             }
           } catch (error) {
             console.error("Error fetching user by email:", error);
