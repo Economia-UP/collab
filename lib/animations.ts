@@ -5,11 +5,11 @@ export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: { 
     opacity: 1,
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
   },
   exit: { 
     opacity: 0,
-    transition: { duration: 0.3, ease: "easeIn" }
+    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] }
   }
 };
 
@@ -85,7 +85,7 @@ export const scaleIn: Variants = {
 
 export const scaleOnHover = {
   scale: 1.02,
-  transition: { duration: 0.2, ease: "easeOut" }
+  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
 };
 
 // Spring animations (bouncy but refined)
@@ -154,7 +154,7 @@ export const staggerItem: Variants = {
 // Card hover animations
 export const cardHover = {
   y: -4,
-  transition: { duration: 0.2, ease: "easeOut" }
+  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
 };
 
 export const cardTap = {
@@ -165,7 +165,7 @@ export const cardTap = {
 // Button animations
 export const buttonHover = {
   scale: 1.05,
-  transition: { duration: 0.2, ease: "easeOut" }
+  transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] }
 };
 
 export const buttonTap = {
