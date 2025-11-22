@@ -52,7 +52,8 @@ export const authConfig = {
   session: {
     strategy: "database" as const,
   },
-} as const;
+};
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig as any);
+// @ts-expect-error - NextAuth v5 type compatibility
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
 
