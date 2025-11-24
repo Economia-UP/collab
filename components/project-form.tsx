@@ -57,6 +57,10 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
   const [programmingLangs, setProgrammingLangs] = useState<string[]>(initialData?.programmingLangs || []);
   const [requiredSkills, setRequiredSkills] = useState<string[]>(initialData?.requiredSkills || []);
   const [skillInput, setSkillInput] = useState("");
+  const [inviteEmails, setInviteEmails] = useState<string[]>([]);
+  const [coOwnerEmails, setCoOwnerEmails] = useState<string[]>([]);
+  const [emailInput, setEmailInput] = useState("");
+  const [coOwnerInput, setCoOwnerInput] = useState("");
 
   const {
     register,
@@ -105,6 +109,38 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
     setValue("requiredSkills", newSkills);
   };
 
+  const addEmail = (email: string, type: "invite" | "coOwner") => {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !trimmedEmail.endsWith("@up.edu.mx")) {
+      toast({
+        title: "Email inválido",
+        description: "Debe ser un correo @up.edu.mx",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (type === "invite") {
+      if (!inviteEmails.includes(trimmedEmail) && !coOwnerEmails.includes(trimmedEmail)) {
+        setInviteEmails([...inviteEmails, trimmedEmail]);
+        setEmailInput("");
+      }
+    } else {
+      if (!coOwnerEmails.includes(trimmedEmail) && !inviteEmails.includes(trimmedEmail)) {
+        setCoOwnerEmails([...coOwnerEmails, trimmedEmail]);
+        setCoOwnerInput("");
+      }
+    }
+  };
+
+  const removeEmail = (email: string, type: "invite" | "coOwner") => {
+    if (type === "invite") {
+      setInviteEmails(inviteEmails.filter((e) => e !== email));
+    } else {
+      setCoOwnerEmails(coOwnerEmails.filter((e) => e !== email));
+    }
+  };
+
   const onSubmit = async (data: ProjectFormData) => {
     try {
       if (projectId) {
@@ -130,6 +166,8 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           requiredSkills,
           githubRepoUrl: data.githubRepoUrl || undefined,
           overleafProjectUrl: data.overleafProjectUrl || undefined,
+          inviteEmails: inviteEmails.length > 0 ? inviteEmails : undefined,
+          coOwners: coOwnerEmails.length > 0 ? coOwnerEmails : undefined,
         });
         toast({
           title: "Proyecto creado",
@@ -321,6 +359,114 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           )}
         </CardContent>
       </Card>
+
+      {!projectId && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Colaboradores (Opcional)</CardTitle>
+            <CardDescription>Invita colaboradores o asigna co-propietarios al crear el proyecto</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Co-Propietarios */}
+            <div className="space-y-2">
+              <Label htmlFor="coOwners">Co-Propietarios</Label>
+              <p className="text-xs text-muted-foreground">
+                Agrega correos @up.edu.mx de usuarios que serán co-propietarios del proyecto
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  id="coOwners"
+                  type="email"
+                  value={coOwnerInput}
+                  onChange={(e) => setCoOwnerInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addEmail(coOwnerInput, "coOwner");
+                    }
+                  }}
+                  placeholder="usuario@up.edu.mx"
+                />
+                <Button
+                  type="button"
+                  onClick={() => addEmail(coOwnerInput, "coOwner")}
+                  variant="outline"
+                >
+                  Agregar
+                </Button>
+              </div>
+              {coOwnerEmails.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {coOwnerEmails.map((email) => (
+                    <div
+                      key={email}
+                      className="flex items-center gap-1 px-2 py-1 bg-dorado/10 text-dorado rounded-md text-sm"
+                    >
+                      <span>{email}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeEmail(email, "coOwner")}
+                        className="hover:text-dorado-dark"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Colaboradores */}
+            <div className="space-y-2">
+              <Label htmlFor="inviteEmails">Invitar Colaboradores</Label>
+              <p className="text-xs text-muted-foreground">
+                Agrega correos @up.edu.mx de usuarios que quieres invitar como colaboradores
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  id="inviteEmails"
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addEmail(emailInput, "invite");
+                    }
+                  }}
+                  placeholder="usuario@up.edu.mx"
+                />
+                <Button
+                  type="button"
+                  onClick={() => addEmail(emailInput, "invite")}
+                  variant="outline"
+                >
+                  Agregar
+                </Button>
+              </div>
+              {inviteEmails.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {inviteEmails.map((email) => (
+                    <div
+                      key={email}
+                      className="flex items-center gap-1 px-2 py-1 bg-azul/10 text-azul rounded-md text-sm"
+                    >
+                      <span>{email}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeEmail(email, "invite")}
+                        className="hover:text-azul-dark"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

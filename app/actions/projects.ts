@@ -17,6 +17,8 @@ export async function createProject(data: {
   status?: ProjectStatus;
   githubRepoUrl?: string;
   overleafProjectUrl?: string;
+  inviteEmails?: string[];
+  coOwners?: string[];
 }) {
   const session = await requireAuth();
   const userId = session.user.id;
@@ -47,6 +49,72 @@ export async function createProject(data: {
       message: `Proyecto "${project.title}" creado`,
     },
   });
+
+  // Add co-owners and invited members
+  if (data.coOwners && data.coOwners.length > 0) {
+    for (const email of data.coOwners) {
+      if (!email || !email.endsWith("@up.edu.mx")) continue;
+      
+      const user = await prisma.user.findUnique({
+        where: { email: email.trim() },
+      });
+
+      if (user && user.id !== userId) {
+        await prisma.projectMember.upsert({
+          where: {
+            projectId_userId: {
+              projectId: project.id,
+              userId: user.id,
+            },
+          },
+          update: {
+            status: "ACTIVE",
+            role: "PI", // Principal Investigator (co-owner)
+          },
+          create: {
+            projectId: project.id,
+            userId: user.id,
+            status: "ACTIVE",
+            role: "PI",
+          },
+        });
+      }
+    }
+  }
+
+  // Add invited members
+  if (data.inviteEmails && data.inviteEmails.length > 0) {
+    for (const email of data.inviteEmails) {
+      if (!email || !email.endsWith("@up.edu.mx")) continue;
+      
+      const user = await prisma.user.findUnique({
+        where: { email: email.trim() },
+      });
+
+      if (user && user.id !== userId) {
+        // Check if already added as co-owner
+        const existing = await prisma.projectMember.findUnique({
+          where: {
+            projectId_userId: {
+              projectId: project.id,
+              userId: user.id,
+            },
+          },
+        });
+
+        if (!existing) {
+          await prisma.projectMember.create({
+            data: {
+              projectId: project.id,
+              userId: user.id,
+              status: "ACTIVE",
+              role: "CO_AUTHOR",
+            },
+          });
+        }
+      }
+    }
+  }
 
   revalidatePath("/projects");
   revalidatePath("/dashboard");
@@ -199,12 +267,26 @@ export async function getProjects(filters?: {
   }
 
   if (filters?.search) {
-    where.OR = [
-      ...(where.OR || []),
-      { title: { contains: filters.search, mode: "insensitive" } },
-      { shortSummary: { contains: filters.search, mode: "insensitive" } },
-      { description: { contains: filters.search, mode: "insensitive" } },
-    ];
+    // If we already have an OR condition, we need to combine it with search
+    if (where.OR) {
+      where.AND = [
+        { OR: where.OR },
+        {
+          OR: [
+            { title: { contains: filters.search, mode: "insensitive" } },
+            { shortSummary: { contains: filters.search, mode: "insensitive" } },
+            { description: { contains: filters.search, mode: "insensitive" } },
+          ],
+        },
+      ];
+      delete where.OR;
+    } else {
+      where.OR = [
+        { title: { contains: filters.search, mode: "insensitive" } },
+        { shortSummary: { contains: filters.search, mode: "insensitive" } },
+        { description: { contains: filters.search, mode: "insensitive" } },
+      ];
+    }
   }
 
   if (filters?.hasGithub) {
