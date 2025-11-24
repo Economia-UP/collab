@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { ProjectStatus, Visibility } from "@prisma/client";
+import { createProjectGoogleDriveFolder } from "@/app/actions/google-drive";
+import { createProjectDropboxFolder } from "@/app/actions/dropbox";
 
 export async function createProject(data: {
   title: string;
@@ -116,6 +118,26 @@ export async function createProject(data: {
         }
       }
     }
+  }
+
+  // Create Google Drive folder if user has Google Drive connected
+  try {
+    const owner = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { googleDriveAccessToken: true, dropboxAccessToken: true },
+    });
+
+    if (owner?.googleDriveAccessToken) {
+      await createProjectGoogleDriveFolder(project.id);
+    }
+
+    // Create Dropbox folder if user has Dropbox connected
+    if (owner?.dropboxAccessToken) {
+      await createProjectDropboxFolder(project.id);
+    }
+  } catch (error) {
+    console.error("Failed to create cloud storage folder:", error);
+    // Don't fail project creation if folder creation fails
   }
 
   revalidatePath("/projects");

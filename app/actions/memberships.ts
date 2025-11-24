@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { MembershipStatus, ProjectRole } from "@prisma/client";
+import { shareGoogleDriveFolderWithMember, revokeGoogleDriveAccessFromMember } from "@/app/actions/google-drive";
+import { shareDropboxFolderWithMember, revokeDropboxAccessFromMember } from "@/app/actions/dropbox";
 
 export async function requestMembership(projectId: string, message?: string) {
   const session = await requireAuth();
@@ -118,6 +120,28 @@ export async function approveMembership(projectId: string, userId: string) {
     },
   });
 
+  // Share Google Drive folder if exists
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { googleDriveFolderId: true },
+  });
+
+  if (project?.googleDriveFolderId) {
+    try {
+      const memberUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      });
+
+      if (memberUser?.email) {
+        await shareGoogleDriveFolderWithMember(projectId, memberUser.email, "writer");
+      }
+    } catch (error) {
+      console.error("Failed to share Google Drive folder:", error);
+      // Don't fail the membership approval if Google Drive sharing fails
+    }
+  }
+
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");
 
@@ -189,6 +213,12 @@ export async function removeMember(projectId: string, userId: string) {
     throw new Error("No puedes remover al propietario del proyecto");
   }
 
+  // Get user email before removing
+  const memberUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+
   await prisma.projectMember.update({
     where: {
       projectId_userId: {
@@ -200,6 +230,32 @@ export async function removeMember(projectId: string, userId: string) {
       status: "LEFT",
     },
   });
+
+  // Revoke Google Drive and Dropbox access if exists
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { googleDriveFolderId: true, dropboxFolderId: true },
+  });
+
+  if (memberUser?.email) {
+    if (project?.googleDriveFolderId) {
+      try {
+        await revokeGoogleDriveAccessFromMember(projectId, memberUser.email);
+      } catch (error) {
+        console.error("Failed to revoke Google Drive access:", error);
+        // Don't fail the removal if Google Drive revoke fails
+      }
+    }
+
+    if (project?.dropboxFolderId) {
+      try {
+        await revokeDropboxAccessFromMember(projectId, memberUser.email);
+      } catch (error) {
+        console.error("Failed to revoke Dropbox access:", error);
+        // Don't fail the removal if Dropbox revoke fails
+      }
+    }
+  }
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");

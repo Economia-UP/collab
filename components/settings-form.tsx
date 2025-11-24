@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { updateProfile } from "@/app/actions/user";
 import { useToast } from "@/hooks/use-toast";
 import { User, Role } from "@prisma/client";
-import { Github, CheckCircle2, XCircle } from "lucide-react";
+import { Github, CheckCircle2, XCircle, FolderOpen, Cloud } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
@@ -160,6 +160,60 @@ export function SettingsForm({ user }: SettingsFormProps) {
               <Button asChild>
                 <Link href="/api/github/oauth">
                   Conectar GitHub
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Google Drive Integration */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <FolderOpen className="h-5 w-5" />
+              <div>
+                <p className="font-medium">Google Drive</p>
+                <p className="text-sm text-muted-foreground">
+                  {user.googleDriveAccessToken
+                    ? "Conectado - Las carpetas se compartirán automáticamente"
+                    : "Conecta tu cuenta de Google Drive para compartir carpetas automáticamente"}
+                </p>
+              </div>
+            </div>
+            {user.googleDriveAccessToken ? (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <span className="text-sm text-muted-foreground">Conectado</span>
+              </div>
+            ) : (
+              <Button asChild>
+                <Link href="/api/google-drive/oauth">
+                  Conectar Google Drive
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Dropbox Integration */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <Cloud className="h-5 w-5" />
+              <div>
+                <p className="font-medium">Dropbox</p>
+                <p className="text-sm text-muted-foreground">
+                  {user.dropboxAccessToken
+                    ? "Conectado - Las carpetas se compartirán automáticamente"
+                    : "Conecta tu cuenta de Dropbox para compartir carpetas automáticamente"}
+                </p>
+              </div>
+            </div>
+            {user.dropboxAccessToken ? (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <span className="text-sm text-muted-foreground">Conectado</span>
+              </div>
+            ) : (
+              <Button asChild>
+                <Link href="/api/dropbox/oauth">
+                  Conectar Dropbox
                 </Link>
               </Button>
             )}

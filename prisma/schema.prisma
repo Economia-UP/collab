@@ -16,6 +16,10 @@ model User {
   role                Role            @default(STUDENT)
   githubUsername      String?
   githubAccessToken   String?
+  googleDriveAccessToken   String?
+  googleDriveRefreshToken  String?
+  dropboxAccessToken       String?
+  dropboxRefreshToken      String?
   overleafAccessToken String?
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -46,6 +50,10 @@ model Project {
   githubRepoData      Json?
   githubWebhookId     String?
   githubWebhookSecret String?
+  googleDriveFolderId String?
+  googleDriveFolderUrl String?
+  dropboxFolderId     String?
+  dropboxFolderUrl    String?
   overleafProjectId   String?
   overleafProjectUrl  String?
   overleafProjectData Json?
