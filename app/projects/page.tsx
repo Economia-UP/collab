@@ -28,7 +28,7 @@ export default async function ProjectsPage({
   };
 
   let session = null;
-  let projects = [];
+  let projects: Awaited<ReturnType<typeof getProjects>> = [];
   
   try {
     session = await getSession();
