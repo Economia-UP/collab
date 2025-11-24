@@ -23,20 +23,8 @@ export default function RootLayout({
 }>) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   
-  // If no publishable key, render without ClerkProvider (for build time)
-  if (!publishableKey) {
-    return (
-      <html lang="es" className={spaceGrotesk.variable}>
-        <body className="font-sans antialiased">
-          <Providers>
-            {children}
-            <Toaster />
-          </Providers>
-        </body>
-      </html>
-    );
-  }
-  
+  // Always wrap with ClerkProvider - it can work in keyless mode for development
+  // If no key is provided, Clerk will show a message but won't crash
   return (
     <ClerkProvider publishableKey={publishableKey}>
       <html lang="es" className={spaceGrotesk.variable}>
