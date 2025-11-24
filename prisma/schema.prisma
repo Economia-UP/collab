@@ -44,6 +44,8 @@ model Project {
   githubRepoName      String?
   githubRepoOwner     String?
   githubRepoData      Json?
+  githubWebhookId     String?
+  githubWebhookSecret String?
   overleafProjectId   String?
   overleafProjectUrl  String?
   overleafProjectData Json?
@@ -190,6 +192,10 @@ enum ActivityType {
   TASK_UPDATED
   GITHUB_REPO_CONNECTED
   GITHUB_REPO_DISCONNECTED
+  GITHUB_COMMIT
+  GITHUB_ISSUE_CREATED
+  GITHUB_ISSUE_CLOSED
+  GITHUB_PULL_REQUEST
   OVERLEAF_PROJECT_CONNECTED
   OVERLEAF_PROJECT_DISCONNECTED
 }

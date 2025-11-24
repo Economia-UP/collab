@@ -12,6 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { updateProfile } from "@/app/actions/user";
 import { useToast } from "@/hooks/use-toast";
 import { User, Role } from "@prisma/client";
+import { Github, CheckCircle2, XCircle } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 const profileSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -25,6 +29,8 @@ interface SettingsFormProps {
 
 export function SettingsForm({ user }: SettingsFormProps) {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  
   const {
     register,
     handleSubmit,
@@ -35,6 +41,24 @@ export function SettingsForm({ user }: SettingsFormProps) {
       name: user.name || "",
     },
   });
+
+  useEffect(() => {
+    const githubConnected = searchParams.get("github_connected");
+    const error = searchParams.get("error");
+    
+    if (githubConnected === "true") {
+      toast({
+        title: "GitHub conectado",
+        description: "Tu cuenta de GitHub se ha conectado correctamente.",
+      });
+    } else if (error) {
+      toast({
+        title: "Error",
+        description: `Error al conectar GitHub: ${error}`,
+        variant: "destructive",
+      });
+    }
+  }, [searchParams, toast]);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -103,6 +127,43 @@ export function SettingsForm({ user }: SettingsFormProps) {
               {isSubmitting ? "Guardando..." : "Guardar cambios"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Integraciones</CardTitle>
+          <CardDescription>
+            Conecta tus cuentas externas para sincronización automática
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* GitHub Integration */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <Github className="h-5 w-5" />
+              <div>
+                <p className="font-medium">GitHub</p>
+                <p className="text-sm text-muted-foreground">
+                  {user.githubAccessToken
+                    ? `Conectado como @${user.githubUsername || "usuario"}`
+                    : "Conecta tu cuenta de GitHub para sincronizar repositorios"}
+                </p>
+              </div>
+            </div>
+            {user.githubAccessToken ? (
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <span className="text-sm text-muted-foreground">Conectado</span>
+              </div>
+            ) : (
+              <Button asChild>
+                <Link href="/api/github/oauth">
+                  Conectar GitHub
+                </Link>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
