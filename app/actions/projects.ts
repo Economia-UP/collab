@@ -278,7 +278,7 @@ export async function getProjectById(projectId: string) {
     project.visibility === "PRIVATE" &&
     project.ownerId !== userId &&
     !isUserAdmin &&
-    !project.members.some((m) => m.userId === userId && m.status === "ACTIVE")
+    !project.members.some((m: { userId: string; status: string }) => m.userId === userId && m.status === "ACTIVE")
   ) {
     throw new Error("Unauthorized");
   }

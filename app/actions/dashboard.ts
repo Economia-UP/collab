@@ -56,7 +56,7 @@ export async function getRecentActivity() {
     select: { id: true },
   });
 
-  const projectIds = userProjects.map((p) => p.id);
+  const projectIds = userProjects.map((p: { id: string }) => p.id);
 
   const activities = await prisma.activityLog.findMany({
     where: {

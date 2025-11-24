@@ -42,3 +42,4 @@ export const config = {
     "/((?!api/webhooks|_next/static|_next/image|favicon.ico).*)",
   ],
 };
+
