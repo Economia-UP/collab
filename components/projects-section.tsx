@@ -38,7 +38,9 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
     <section className="bg-gradient-to-b from-muted/30 to-background py-20 md:py-24">
       <div className="container mx-auto px-4">
         <motion.div
-          {...fadeInUp}
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
           className="mb-16 text-center"
         >
           <h2 className="mb-4 text-4xl font-bold">Proyectos destacados</h2>
@@ -48,11 +50,13 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
         </motion.div>
         
         <motion.div
-          {...staggerContainer}
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
           className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
         >
           {projects.map((project) => (
-            <motion.div key={project.id} {...staggerItem}>
+            <motion.div key={project.id} variants={staggerItem}>
               <Card>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">

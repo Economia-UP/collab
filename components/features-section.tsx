@@ -31,7 +31,9 @@ export function FeaturesSection() {
     <section className="py-20 md:py-24">
       <div className="container mx-auto px-4">
         <motion.div
-          {...fadeInUp}
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
           className="mb-16 text-center"
         >
           <h2 className="mb-4 text-4xl font-bold">Características principales</h2>
@@ -41,13 +43,15 @@ export function FeaturesSection() {
         </motion.div>
         
         <motion.div
-          {...staggerContainer}
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
           className="grid gap-8 md:grid-cols-3"
         >
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <motion.div key={index} {...staggerItem}>
+              <motion.div key={index} variants={staggerItem}>
                 <Card className="h-full">
                   <CardHeader>
                     <Icon className={`mb-4 h-10 w-10 ${feature.color}`} />

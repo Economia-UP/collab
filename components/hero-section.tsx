@@ -16,15 +16,19 @@ export function HeroSection({ session }: HeroSectionProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-dorado/5 via-transparent to-azul/5 animate-pulse" />
       
       <motion.div
-        {...staggerContainer}
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
         className="container relative mx-auto px-4"
       >
         <motion.div
-          {...staggerItem}
+          variants={staggerItem}
           className="mx-auto max-w-4xl text-center"
         >
           <motion.h1
-            {...springIn}
+            initial="hidden"
+            animate="visible"
+            variants={springIn}
             className="mb-6 text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl"
           >
             <span className="bg-gradient-to-r from-dorado via-azul to-vino bg-clip-text text-transparent">
@@ -35,7 +39,9 @@ export function HeroSection({ session }: HeroSectionProps) {
           </motion.h1>
           
           <motion.p
-            {...fadeInUp}
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
             className="mb-10 text-xl text-muted-foreground md:text-2xl"
           >
             Plataforma de colaboración para investigadores de la{" "}
@@ -45,7 +51,9 @@ export function HeroSection({ session }: HeroSectionProps) {
           </motion.p>
           
           <motion.div
-            {...fadeInUp}
+            initial="hidden"
+            animate="visible"
+            variants={fadeInUp}
             className="flex flex-col gap-4 sm:flex-row sm:justify-center"
           >
             {!session ? (

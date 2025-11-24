@@ -32,7 +32,9 @@ export function Navbar({ session }: NavbarProps) {
 
   return (
     <motion.nav 
-      {...fadeInDown}
+      initial="hidden"
+      animate="visible"
+      variants={fadeInDown}
       className="sticky top-0 z-50 w-full border-b glass shadow-soft"
     >
       <div className="container flex h-16 items-center justify-between px-4">
