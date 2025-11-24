@@ -5,6 +5,8 @@ import { ProjectStatus, Visibility } from "@prisma/client";
 import { ProjectsFilter } from "@/components/projects-filter";
 import { getSession } from "@/lib/auth-config";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProjectsPage({
   searchParams,
 }: {

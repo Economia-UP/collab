@@ -9,6 +9,8 @@ import Link from "next/link";
 import { FolderKanban, Users } from "lucide-react";
 import { getSession } from "@/lib/auth-config";
 
+export const dynamic = 'force-dynamic';
+
 export default async function MyProjectsPage() {
   const session = await requireAuth();
   const userId = session.user.id;

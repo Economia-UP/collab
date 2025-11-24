@@ -6,6 +6,8 @@ import { getServerSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/auth";
 import { getSession } from "@/lib/auth-config";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditProjectPage({
   params,
 }: {

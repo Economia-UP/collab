@@ -5,6 +5,8 @@ import { DashboardStats } from "@/components/dashboard-stats";
 import { DashboardQuickActions } from "@/components/dashboard-quick-actions";
 import { DashboardActivity } from "@/components/dashboard-activity";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const session = await getSession();
   const stats = await getDashboardStats();

@@ -2,6 +2,8 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { ProjectForm } from "@/components/project-form";
 import { getSession } from "@/lib/auth-config";
 
+export const dynamic = 'force-dynamic';
+
 export default async function NewProjectPage() {
   const session = await getSession();
   return (

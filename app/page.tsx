@@ -9,6 +9,8 @@ import { HeroSection } from "@/components/hero-section";
 import { FeaturesSection } from "@/components/features-section";
 import { ProjectsSection } from "@/components/projects-section";
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   let session = null;
   try {
