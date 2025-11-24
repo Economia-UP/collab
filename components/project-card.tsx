@@ -6,10 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { Button } from "@/components/ui/button";
-import { Github, FileText, Users, MessageSquare } from "lucide-react";
+import { Github, FileText, Users, MessageSquare, UserPlus, Clock } from "lucide-react";
 import { ProjectStatus, Visibility } from "@prisma/client";
 import { motion } from "framer-motion";
 import { scaleIn } from "@/lib/animations";
+import { requestMembership } from "@/app/actions/memberships";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface ProjectCardProps {
   project: {
@@ -37,10 +40,38 @@ interface ProjectCardProps {
     };
   };
   isMember?: boolean;
+  isOwner?: boolean;
+  hasPendingRequest?: boolean;
   onJoinClick?: () => void;
 }
 
-export function ProjectCard({ project, isMember, onJoinClick }: ProjectCardProps) {
+export function ProjectCard({ project, isMember, isOwner, hasPendingRequest, onJoinClick }: ProjectCardProps) {
+  const { toast } = useToast();
+  const [isRequesting, setIsRequesting] = useState(false);
+
+  const handleRequestAccess = async () => {
+    if (onJoinClick) {
+      onJoinClick();
+      return;
+    }
+
+    setIsRequesting(true);
+    try {
+      await requestMembership(project.id);
+      toast({
+        title: "Solicitud enviada",
+        description: "Tu solicitud de acceso ha sido enviada al propietario del proyecto.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo enviar la solicitud de acceso.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRequesting(false);
+    }
+  };
   return (
     <motion.div
       {...scaleIn}
@@ -103,9 +134,30 @@ export function ProjectCard({ project, isMember, onJoinClick }: ProjectCardProps
           <Button asChild variant="outline" className="flex-1">
             <Link href={`/projects/${project.id}`}>Ver Proyecto</Link>
           </Button>
-          {!isMember && onJoinClick && (
-            <Button onClick={onJoinClick} className="flex-1">
-              Quiero unirme
+          {!isMember && !isOwner && (
+            <Button 
+              onClick={handleRequestAccess} 
+              disabled={isRequesting || hasPendingRequest}
+              className="flex-1"
+            >
+              {hasPendingRequest ? (
+                <>
+                  <Clock className="h-4 w-4 mr-2" />
+                  Pendiente
+                </>
+              ) : isRequesting ? (
+                "Enviando..."
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Solicitar Acceso
+                </>
+              )}
+            </Button>
+          )}
+          {isMember && (
+            <Button asChild variant="default" className="flex-1">
+              <Link href={`/projects/${project.id}`}>Abrir Proyecto</Link>
             </Button>
           )}
         </div>

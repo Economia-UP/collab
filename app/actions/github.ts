@@ -10,7 +10,7 @@ import {
   createGitHubWebhook,
   deleteGitHubWebhook,
   addGitHubCollaborator,
-  removeGitHubCollaboratorFromRepo,
+  removeGitHubCollaborator as removeGitHubCollaboratorFromRepo,
   createGitHubIssue,
 } from "@/lib/github-client";
 import crypto from "crypto";

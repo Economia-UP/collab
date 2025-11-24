@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { MembershipStatus, ProjectRole } from "@prisma/client";
 import { shareGoogleDriveFolderWithMember, revokeGoogleDriveAccessFromMember } from "@/app/actions/google-drive";
 import { shareDropboxFolderWithMember, revokeDropboxAccessFromMember } from "@/app/actions/dropbox";
+import { sendNotification, NotificationTemplates } from "@/lib/notifications";
 
 export async function requestMembership(projectId: string, message?: string) {
   const session = await requireAuth();
@@ -13,6 +14,7 @@ export async function requestMembership(projectId: string, message?: string) {
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
+    select: { ownerId: true, title: true },
   });
 
   if (!project) {
@@ -69,8 +71,31 @@ export async function requestMembership(projectId: string, message?: string) {
     },
   });
 
+  // Get requester info for notification
+  const requester = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, email: true },
+  });
+
+  // Send notification to project owner
+  if (project.ownerId) {
+    const template = NotificationTemplates.membershipRequest(
+      project.title,
+      requester?.name || requester?.email || "Un usuario",
+      projectId
+    );
+    
+    await sendNotification(project.ownerId, {
+      to: {},
+      ...template,
+    }).catch((error) => {
+      console.error('Error sending membership request notification:', error);
+    });
+  }
+
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");
+  revalidatePath("/projects");
 
   return membership;
 }
@@ -81,7 +106,7 @@ export async function approveMembership(projectId: string, userId: string) {
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true },
+    select: { ownerId: true, title: true },
   });
 
   if (!project) {
@@ -120,8 +145,18 @@ export async function approveMembership(projectId: string, userId: string) {
     },
   });
 
+  // Send notification to the approved member
+  const template = NotificationTemplates.membershipApproved(project.title, projectId);
+  
+  await sendNotification(userId, {
+    to: {},
+    ...template,
+  }).catch((error) => {
+    console.error('Error sending membership approval notification:', error);
+  });
+
   // Share Google Drive and Dropbox folders if exist
-  const project = await prisma.project.findUnique({
+  const projectWithFolders = await prisma.project.findUnique({
     where: { id: projectId },
     select: { googleDriveFolderId: true, dropboxFolderId: true },
   });
@@ -132,7 +167,7 @@ export async function approveMembership(projectId: string, userId: string) {
   });
 
   if (memberUser?.email) {
-    if (project?.googleDriveFolderId) {
+    if (projectWithFolders?.googleDriveFolderId) {
       try {
         await shareGoogleDriveFolderWithMember(projectId, memberUser.email, "writer");
       } catch (error) {
@@ -141,7 +176,7 @@ export async function approveMembership(projectId: string, userId: string) {
       }
     }
 
-    if (project?.dropboxFolderId) {
+    if (projectWithFolders?.dropboxFolderId) {
       try {
         await shareDropboxFolderWithMember(projectId, memberUser.email);
       } catch (error) {
@@ -153,6 +188,7 @@ export async function approveMembership(projectId: string, userId: string) {
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");
+  revalidatePath("/projects");
 
   return membership;
 }
@@ -163,7 +199,7 @@ export async function rejectMembership(projectId: string, userId: string) {
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true },
+    select: { ownerId: true, title: true },
   });
 
   if (!project) {
@@ -195,8 +231,19 @@ export async function rejectMembership(projectId: string, userId: string) {
     },
   });
 
+  // Send notification to the rejected member
+  const template = NotificationTemplates.membershipRejected(project.title);
+  
+  await sendNotification(userId, {
+    to: {},
+    ...template,
+  }).catch((error) => {
+    console.error('Error sending membership rejection notification:', error);
+  });
+
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");
+  revalidatePath("/projects");
 
   return { success: true };
 }
@@ -241,13 +288,13 @@ export async function removeMember(projectId: string, userId: string) {
   });
 
   // Revoke Google Drive and Dropbox access if exists
-  const project = await prisma.project.findUnique({
+  const projectWithFolders = await prisma.project.findUnique({
     where: { id: projectId },
     select: { googleDriveFolderId: true, dropboxFolderId: true },
   });
 
   if (memberUser?.email) {
-    if (project?.googleDriveFolderId) {
+    if (projectWithFolders?.googleDriveFolderId) {
       try {
         await revokeGoogleDriveAccessFromMember(projectId, memberUser.email);
       } catch (error) {
@@ -256,7 +303,7 @@ export async function removeMember(projectId: string, userId: string) {
       }
     }
 
-    if (project?.dropboxFolderId) {
+    if (projectWithFolders?.dropboxFolderId) {
       try {
         await revokeDropboxAccessFromMember(projectId, memberUser.email);
       } catch (error) {
@@ -268,6 +315,7 @@ export async function removeMember(projectId: string, userId: string) {
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");
+  revalidatePath("/projects");
 
   return { success: true };
 }
@@ -312,15 +360,30 @@ export async function inviteMembers(
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true, title: true },
+    include: {
+      members: {
+        where: {
+          userId: currentUserId,
+          status: "ACTIVE",
+        },
+        select: {
+          role: true,
+        },
+      },
+    },
   });
 
   if (!project) {
     throw new Error("Project not found");
   }
 
-  if (project.ownerId !== currentUserId && !isAdmin(session.user.role)) {
-    throw new Error("Unauthorized");
+  const isOwner = project.ownerId === currentUserId;
+  const isCoOwner = project.members.some(m => m.role === "PI");
+  const isAdminUser = isAdmin(session.user.role);
+
+  // Only owner, co-owner (PI), or admin can invite members
+  if (!isOwner && !isCoOwner && !isAdminUser) {
+    throw new Error("Unauthorized: Solo el propietario o co-propietario pueden invitar miembros");
   }
 
   const invitedUsers = [];
@@ -407,6 +470,7 @@ export async function inviteMembers(
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/my-projects");
+  revalidatePath("/projects");
 
   return { success: true, invited: invitedUsers.length };
 }

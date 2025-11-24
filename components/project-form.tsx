@@ -701,7 +701,6 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
             </div>
           </CardContent>
         </Card>
-      )}
 
       <Card>
         <CardHeader>

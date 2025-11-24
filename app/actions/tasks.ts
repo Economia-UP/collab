@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { TaskStatus, TaskPriority, TaskType } from "@prisma/client";
+import { sendNotification, NotificationTemplates } from "@/lib/notifications";
 
 export async function getProjectTasks(projectId: string) {
   const session = await requireAuth();
@@ -112,6 +113,30 @@ export async function createTask(
       message: `Tarea "${task.title}" creada`,
     },
   });
+
+  // Send notification to assignee if task is assigned
+  if (data.assigneeId && data.assigneeId !== userId) {
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { title: true },
+    });
+
+    if (project) {
+      const template = NotificationTemplates.taskAssigned(
+        project.title,
+        task.title,
+        projectId,
+        task.id
+      );
+
+      await sendNotification(data.assigneeId, {
+        to: {},
+        ...template,
+      }).catch((error) => {
+        console.error('Error sending task assignment notification:', error);
+      });
+    }
+  }
 
   revalidatePath(`/projects/${projectId}`);
 

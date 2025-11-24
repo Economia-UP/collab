@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/sign-out-button";
 import { motion } from "framer-motion";
 import { fadeInDown } from "@/lib/animations";
+import { useEffect, useState } from "react";
 
 interface NavbarProps {
   session?: {
@@ -29,6 +30,11 @@ interface NavbarProps {
 }
 
 export function Navbar({ session }: NavbarProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <motion.nav 
@@ -69,51 +75,65 @@ export function Navbar({ session }: NavbarProps) {
         <div className="flex items-center gap-4">
           {session ? (
             <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="relative h-10 w-10 rounded-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-dorado/10 hover:text-dorado"
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={session.user?.image || undefined} alt={session.user?.name || ""} />
-                      <AvatarFallback>
-                        {session.user?.name?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{session.user?.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
-                      {session.user?.role && (
-                        <Badge variant="secondary" className="mt-1 w-fit">
-                          {session.user.role}
-                        </Badge>
-                      )}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/projects">Proyectos</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/my-projects">Mis Proyectos</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings">Configuración</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <SignOutButton />
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {mounted ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="relative h-10 w-10 rounded-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-dorado/10 hover:text-dorado"
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={session.user?.image || undefined} alt={session.user?.name || ""} />
+                        <AvatarFallback>
+                          {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{session.user?.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{session.user?.email}</p>
+                        {session.user?.role && (
+                          <Badge variant="secondary" className="mt-1 w-fit">
+                            {session.user.role}
+                          </Badge>
+                        )}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard">Dashboard</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/projects">Proyectos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-projects">Mis Proyectos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings">Configuración</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <SignOutButton />
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  type="button"
+                  className="relative h-10 w-10 rounded-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-dorado/10 hover:text-dorado"
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={session.user?.image || undefined} alt={session.user?.name || ""} />
+                    <AvatarFallback>
+                      {session.user?.name?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              )}
             </>
           ) : (
             <Button asChild className="gradient-dorado hover:opacity-90 transition-smooth">

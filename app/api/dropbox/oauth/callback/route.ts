@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 const DROPBOX_CLIENT_ID = process.env.DROPBOX_CLIENT_ID;
 const DROPBOX_CLIENT_SECRET = process.env.DROPBOX_CLIENT_SECRET;
-const DROPBOX_REDIRECT_URI = process.env.DROPBOX_REDIRECT_URI || `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/dropbox/oauth/callback`;
+const DROPBOX_REDIRECT_URI_BASE = process.env.DROPBOX_REDIRECT_URI || `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/dropbox/oauth/callback`;
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     if (!code || !state) {
       return NextResponse.redirect(
-        new URL("/settings?error=missing_params", req.url)
+        new URL("/settings?error=Parámetros faltantes", req.url)
       );
     }
 
@@ -31,9 +31,11 @@ export async function GET(req: NextRequest) {
     
     if (session.user.id !== userId) {
       return NextResponse.redirect(
-        new URL("/settings?error=invalid_state", req.url)
+        new URL("/settings?error=Estado inválido", req.url)
       );
     }
+
+    const redirectUri = DROPBOX_REDIRECT_URI_BASE;
 
     // Exchange code for access token
     const tokenResponse = await fetch("https://api.dropboxapi.com/oauth2/token", {
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
         grant_type: "authorization_code",
         client_id: DROPBOX_CLIENT_ID!,
         client_secret: DROPBOX_CLIENT_SECRET!,
-        redirect_uri: DROPBOX_REDIRECT_URI,
+        redirect_uri: redirectUri,
       }),
     });
 
@@ -70,6 +72,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Simple redirect back to settings
     return NextResponse.redirect(
       new URL("/settings?dropbox_connected=true", req.url)
     );

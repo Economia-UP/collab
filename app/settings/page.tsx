@@ -24,6 +24,13 @@ export default async function SettingsPage() {
 
   const authSession = await getSession();
 
+  // Check which OAuth integrations are configured
+  const integrationsConfig = {
+    github: !!process.env.GITHUB_CLIENT_ID,
+    googleDrive: !!process.env.GOOGLE_CLIENT_ID,
+    dropbox: !!process.env.DROPBOX_CLIENT_ID,
+  };
+
   return (
     <DashboardLayout session={authSession}>
       <div className="space-y-6">
@@ -34,7 +41,7 @@ export default async function SettingsPage() {
           </p>
         </div>
 
-        <SettingsForm user={user} />
+        <SettingsForm user={user} integrationsConfig={integrationsConfig} />
       </div>
     </DashboardLayout>
   );

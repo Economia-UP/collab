@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { sendNotification, NotificationTemplates } from "@/lib/notifications";
 
 export async function addComment(projectId: string, content: string) {
   const session = await requireAuth();
@@ -60,6 +61,52 @@ export async function addComment(projectId: string, content: string) {
       message: `Comentario agregado`,
     },
   });
+
+  // Get project members and owner to notify them
+  const projectWithMembers = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      owner: {
+        select: { id: true },
+      },
+      members: {
+        where: {
+          status: "ACTIVE",
+        },
+        select: {
+          userId: true,
+        },
+      },
+    },
+  });
+
+  // Send notifications to project owner and members (except the comment author)
+  if (projectWithMembers) {
+    const recipients = [
+      projectWithMembers.ownerId,
+      ...projectWithMembers.members.map(m => m.userId),
+    ].filter(id => id !== userId); // Don't notify the comment author
+
+    const template = NotificationTemplates.newComment(
+      projectWithMembers.title,
+      comment.author.name || comment.author.email || "Alguien",
+      content,
+      projectId,
+      comment.id
+    );
+
+    // Send notifications to all recipients
+    await Promise.all(
+      recipients.map(recipientId =>
+        sendNotification(recipientId, {
+          to: {},
+          ...template,
+        }).catch((error) => {
+          console.error(`Error sending comment notification to ${recipientId}:`, error);
+        })
+      )
+    );
+  }
 
   revalidatePath(`/projects/${projectId}`);
 

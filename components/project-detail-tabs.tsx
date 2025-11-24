@@ -13,6 +13,7 @@ import { ProjectOverview } from "./project-overview";
 import { ProjectDiscussion } from "./project-discussion";
 import { ProjectTasks } from "./project-tasks";
 import { ProjectActivity } from "./project-activity";
+import { ProjectFiles } from "./project-files";
 import { Project, ProjectMember, ProjectStatus, Visibility } from "@prisma/client";
 
 interface ProjectDetailTabsProps {
@@ -53,10 +54,11 @@ export function ProjectDetailTabs({
 }: ProjectDetailTabsProps) {
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="overview">Resumen</TabsTrigger>
         <TabsTrigger value="discussion">Discusión</TabsTrigger>
         <TabsTrigger value="tasks">Tareas</TabsTrigger>
+        <TabsTrigger value="files">Archivos</TabsTrigger>
         <TabsTrigger value="activity">Actividad</TabsTrigger>
       </TabsList>
 
@@ -87,6 +89,14 @@ export function ProjectDetailTabs({
             </CardContent>
           </Card>
         )}
+      </TabsContent>
+
+      <TabsContent value="files" className="space-y-4">
+        <ProjectFiles 
+          project={project}
+          isOwner={isOwner}
+          isMember={isMember || isAdmin}
+        />
       </TabsContent>
 
       <TabsContent value="activity" className="space-y-4">

@@ -23,10 +23,17 @@ export default async function ProjectDetailPage({
   try {
     const project = await getProjectById(resolvedParams.id);
     const isOwner = session?.user?.id === project.ownerId;
+    const isCoOwner = project.members.some(
+      (m: any) => m.userId === session?.user?.id && m.role === "PI" && m.status === "ACTIVE"
+    );
+    const isCollaborator = project.members.some(
+      (m: any) => m.userId === session?.user?.id && m.role === "CO_AUTHOR" && m.status === "ACTIVE"
+    );
     const isMember = project.members.some(
-      (m) => m.userId === session?.user?.id && m.status === "ACTIVE"
+      (m: any) => m.userId === session?.user?.id && m.status === "ACTIVE"
     );
     const isAdmin = session?.user?.role === "ADMIN";
+    const canEdit = isOwner || isCoOwner || isCollaborator || isAdmin;
 
     return (
       <DashboardLayout session={authSession}>
@@ -36,7 +43,7 @@ export default async function ProjectDetailPage({
               <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
               <p className="text-muted-foreground mt-2">{project.shortSummary}</p>
             </div>
-            {isOwner && (
+            {canEdit && (
               <Button asChild>
                 <Link href={`/projects/${resolvedParams.id}/edit`}>Editar</Link>
               </Button>

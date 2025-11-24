@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/google-drive/oauth/callback`;
+const GOOGLE_REDIRECT_URI_BASE = process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/google-drive/oauth/callback`;
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     if (!code || !state) {
       return NextResponse.redirect(
-        new URL("/settings?error=missing_params", req.url)
+        new URL("/settings?error=Parámetros faltantes", req.url)
       );
     }
 
@@ -31,9 +31,11 @@ export async function GET(req: NextRequest) {
     
     if (session.user.id !== userId) {
       return NextResponse.redirect(
-        new URL("/settings?error=invalid_state", req.url)
+        new URL("/settings?error=Estado inválido", req.url)
       );
     }
+
+    const redirectUri = GOOGLE_REDIRECT_URI_BASE;
 
     // Exchange code for access token
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
         client_secret: GOOGLE_CLIENT_SECRET!,
         code,
         grant_type: "authorization_code",
-        redirect_uri: GOOGLE_REDIRECT_URI,
+        redirect_uri: redirectUri,
       }),
     });
 
@@ -81,6 +83,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Simple redirect back to settings
     return NextResponse.redirect(
       new URL("/settings?google_drive_connected=true", req.url)
     );

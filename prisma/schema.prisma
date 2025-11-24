@@ -21,6 +21,14 @@ model User {
   dropboxAccessToken       String?
   dropboxRefreshToken      String?
   overleafAccessToken String?
+  // Notification preferences
+  phoneNumber         String?         // WhatsApp number (format: +521234567890)
+  emailNotifications  Boolean         @default(true)
+  whatsappNotifications Boolean       @default(false)
+  notifyOnMembershipRequest Boolean   @default(true)
+  notifyOnComment     Boolean         @default(true)
+  notifyOnTaskAssigned Boolean        @default(true)
+  notifyOnProjectUpdate Boolean       @default(true)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   activityLogs        ActivityLog[]

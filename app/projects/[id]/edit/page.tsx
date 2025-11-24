@@ -26,8 +26,17 @@ export default async function EditProjectPage({
   try {
     const project = await getProjectById(resolvedParams.id);
     
-    // Check if user is owner or admin
-    if (project.ownerId !== session.user.id && !isAdmin(session.user.role)) {
+    // Check if user is owner, co-owner (PI), collaborator (CO_AUTHOR), or admin
+    const isOwner = project.ownerId === session.user.id;
+    const isCoOwner = project.members.some(
+      (m: any) => m.userId === session.user.id && m.role === "PI" && m.status === "ACTIVE"
+    );
+    const isCollaborator = project.members.some(
+      (m: any) => m.userId === session.user.id && m.role === "CO_AUTHOR" && m.status === "ACTIVE"
+    );
+    const isAdminUser = isAdmin(session.user.role);
+    
+    if (!isOwner && !isCoOwner && !isCollaborator && !isAdminUser) {
       redirect(`/projects/${resolvedParams.id}`);
     }
 

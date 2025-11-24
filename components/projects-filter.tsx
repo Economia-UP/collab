@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { X, Search } from "lucide-react";
 import { ProjectStatus } from "@prisma/client";
+import { useState, useEffect } from "react";
 
 const statuses: ProjectStatus[] = [
   "DRAFT",
@@ -44,6 +45,12 @@ const categories = ["Tesis", "Paper", "Grant", "Proyecto", "Otro"];
 export function ProjectsFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+
+  // Fix hydration mismatch by only rendering Select after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const currentSearch = searchParams.get("search") || "";
   const currentTopic = searchParams.get("topic") || "all";
@@ -113,39 +120,51 @@ export function ProjectsFilter() {
 
           {/* Dropdowns */}
           <div className="grid gap-4 md:grid-cols-2">
-            <Select
-              value={currentTopic}
-              onValueChange={(value) => updateSearchParams("topic", value || null)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Tema" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los temas</SelectItem>
-                {topics.map((topic) => (
-                  <SelectItem key={topic} value={topic}>
-                    {topic}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {mounted ? (
+              <Select
+                value={currentTopic}
+                onValueChange={(value) => updateSearchParams("topic", value || null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tema" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los temas</SelectItem>
+                  {topics.map((topic) => (
+                    <SelectItem key={topic} value={topic}>
+                      {topic}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center">
+                <span className="text-muted-foreground">Tema</span>
+              </div>
+            )}
 
-            <Select
-              value={currentCategory}
-              onValueChange={(value) => updateSearchParams("category", value || null)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {mounted ? (
+              <Select
+                value={currentCategory}
+                onValueChange={(value) => updateSearchParams("category", value || null)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center">
+                <span className="text-muted-foreground">Categoría</span>
+              </div>
+            )}
           </div>
 
           {/* Status Chips */}

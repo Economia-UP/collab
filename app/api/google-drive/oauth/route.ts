@@ -11,9 +11,9 @@ export async function GET(req: NextRequest) {
     const session = await requireAuth();
     
     if (!GOOGLE_CLIENT_ID) {
-      return NextResponse.json(
-        { error: "Google Drive OAuth no configurado" },
-        { status: 500 }
+      // Simple redirect to settings with error
+      return NextResponse.redirect(
+        new URL("/settings?error=Google Drive OAuth no configurado", req.url)
       );
     }
 
@@ -26,9 +26,11 @@ export async function GET(req: NextRequest) {
       "https://www.googleapis.com/auth/userinfo.email",
     ];
 
+    const redirectUri = GOOGLE_REDIRECT_URI;
+
     const params = new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: GOOGLE_REDIRECT_URI,
+      redirect_uri: redirectUri,
       response_type: "code",
       scope: scopes.join(" "),
       access_type: "offline",
@@ -41,9 +43,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(googleAuthUrl);
   } catch (error) {
     console.error("Google Drive OAuth error:", error);
-    return NextResponse.json(
-      { error: "Error al iniciar autenticación con Google Drive" },
-      { status: 500 }
+    return NextResponse.redirect(
+      new URL("/settings?error=Error al iniciar autenticación con Google Drive", req.url)
     );
   }
 }

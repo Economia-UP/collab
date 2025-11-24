@@ -165,17 +165,33 @@ export async function updateProject(
   const session = await requireAuth();
   const userId = session.user.id;
 
-  // Check ownership or admin
+  // Check ownership, co-ownership, membership, or admin
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true },
+    include: {
+      members: {
+        where: {
+          userId,
+          status: "ACTIVE",
+        },
+        select: {
+          role: true,
+        },
+      },
+    },
   });
 
   if (!project) {
     throw new Error("Project not found");
   }
 
-  if (project.ownerId !== userId && !isAdmin(session.user.role)) {
+  const isOwner = project.ownerId === userId;
+  const isCoOwner = project.members.some(m => m.role === "PI");
+  const isCollaborator = project.members.some(m => m.role === "CO_AUTHOR");
+  const isAdminUser = isAdmin(session.user.role);
+
+  // Allow update if: owner, co-owner (PI), collaborator (CO_AUTHOR), or admin
+  if (!isOwner && !isCoOwner && !isCollaborator && !isAdminUser) {
     throw new Error("Unauthorized");
   }
 
@@ -206,15 +222,30 @@ export async function deleteProject(projectId: string) {
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true },
+    include: {
+      members: {
+        where: {
+          userId,
+          status: "ACTIVE",
+        },
+        select: {
+          role: true,
+        },
+      },
+    },
   });
 
   if (!project) {
     throw new Error("Project not found");
   }
 
-  if (project.ownerId !== userId && !isAdmin(session.user.role)) {
-    throw new Error("Unauthorized");
+  const isOwner = project.ownerId === userId;
+  const isCoOwner = project.members.some(m => m.role === "PI");
+  const isAdminUser = isAdmin(session.user.role);
+
+  // Only owner, co-owner (PI), or admin can delete
+  if (!isOwner && !isCoOwner && !isAdminUser) {
+    throw new Error("Unauthorized: Solo el propietario o co-propietario pueden eliminar el proyecto");
   }
 
   await prisma.project.delete({
@@ -236,6 +267,7 @@ export async function getProjects(filters?: {
   search?: string;
   hasGithub?: boolean;
   hasOverleaf?: boolean;
+  marketplace?: boolean; // If true, only show public projects (marketplace mode)
 }) {
   // Try to get session, but don't require it (for public projects page)
   let session = null;
@@ -256,8 +288,50 @@ export async function getProjects(filters?: {
 
   const where: any = {};
 
-  // Visibility filter
-  if (!userId) {
+  // MARKETPLACE MODE: Show ALL public projects without any restrictions
+  if (filters?.marketplace) {
+    // Start with visibility = PUBLIC (this is the only requirement)
+    where.visibility = "PUBLIC";
+
+    // Add other filters as AND conditions
+    const additionalFilters: any[] = [];
+
+    if (filters?.topic) {
+      additionalFilters.push({ topic: filters.topic });
+    }
+
+    if (filters?.category) {
+      additionalFilters.push({ category: filters.category });
+    }
+
+    if (filters?.status && filters.status.length > 0) {
+      additionalFilters.push({ status: { in: filters.status } });
+    }
+
+    if (filters?.search) {
+      additionalFilters.push({
+        OR: [
+          { title: { contains: filters.search, mode: "insensitive" } },
+          { shortSummary: { contains: filters.search, mode: "insensitive" } },
+          { description: { contains: filters.search, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    if (filters?.hasGithub) {
+      additionalFilters.push({ githubRepoUrl: { not: null } });
+    }
+
+    if (filters?.hasOverleaf) {
+      additionalFilters.push({ overleafProjectUrl: { not: null } });
+    }
+
+    // If we have additional filters, combine with AND
+    if (additionalFilters.length > 0) {
+      where.AND = [{ visibility: "PUBLIC" }, ...additionalFilters];
+      delete where.visibility; // Remove the direct visibility since it's in AND
+    }
+  } else if (!userId) {
     // No authenticated user - only show public projects
     where.visibility = "PUBLIC";
   } else if (!isUserAdmin) {
@@ -275,54 +349,60 @@ export async function getProjects(filters?: {
       },
     ];
   } else if (filters?.visibility) {
-    // Admin with visibility filter
+    // Admin with visibility filter (only if not in marketplace mode)
     where.visibility = filters.visibility;
   }
 
-  if (filters?.topic) {
-    where.topic = filters.topic;
-  }
+  // Apply other filters for non-marketplace mode
+  if (!filters?.marketplace) {
+    if (filters?.topic) {
+      where.topic = filters.topic;
+    }
 
-  if (filters?.category) {
-    where.category = filters.category;
-  }
+    if (filters?.category) {
+      where.category = filters.category;
+    }
 
-  if (filters?.status && filters.status.length > 0) {
-    where.status = { in: filters.status };
-  }
+    if (filters?.status && filters.status.length > 0) {
+      where.status = { in: filters.status };
+    }
 
-  if (filters?.search) {
-    // If we already have an OR condition, we need to combine it with search
-    if (where.OR) {
-      where.AND = [
-        { OR: where.OR },
-        {
-          OR: [
-            { title: { contains: filters.search, mode: "insensitive" } },
-            { shortSummary: { contains: filters.search, mode: "insensitive" } },
-            { description: { contains: filters.search, mode: "insensitive" } },
-          ],
-        },
-      ];
-      delete where.OR;
-    } else {
-      where.OR = [
-        { title: { contains: filters.search, mode: "insensitive" } },
-        { shortSummary: { contains: filters.search, mode: "insensitive" } },
-        { description: { contains: filters.search, mode: "insensitive" } },
-      ];
+    if (filters?.search) {
+      // Search condition
+      const searchCondition = {
+        OR: [
+          { title: { contains: filters.search, mode: "insensitive" } },
+          { shortSummary: { contains: filters.search, mode: "insensitive" } },
+          { description: { contains: filters.search, mode: "insensitive" } },
+        ],
+      };
+
+      // If we have OR condition, combine with AND
+      if (where.OR) {
+        where.AND = [
+          { OR: where.OR },
+          searchCondition,
+        ];
+        delete where.OR;
+      } else {
+        where.OR = [
+          { title: { contains: filters.search, mode: "insensitive" } },
+          { shortSummary: { contains: filters.search, mode: "insensitive" } },
+          { description: { contains: filters.search, mode: "insensitive" } },
+        ];
+      }
+    }
+
+    if (filters?.hasGithub) {
+      where.githubRepoUrl = { not: null };
+    }
+
+    if (filters?.hasOverleaf) {
+      where.overleafProjectUrl = { not: null };
     }
   }
 
-  if (filters?.hasGithub) {
-    where.githubRepoUrl = { not: null };
-  }
-
-  if (filters?.hasOverleaf) {
-    where.overleafProjectUrl = { not: null };
-  }
-
-  // Check if DATABASE_URL is available
+  // Check if DATABASE_URL is available or database is not reachable
   if (!process.env.DATABASE_URL) {
     // Return dummy data when DATABASE_URL is not available
     const dummyProjects = [
@@ -441,6 +521,11 @@ export async function getProjects(filters?: {
   }
 
   try {
+    // Debug: Log the where clause in marketplace mode
+    if (filters?.marketplace) {
+      console.log("[MARKETPLACE] Query filter:", JSON.stringify(where, null, 2));
+    }
+
     const projects = await prisma.project.findMany({
       where,
       include: {
@@ -453,6 +538,15 @@ export async function getProjects(filters?: {
             role: true,
           },
         },
+        members: userId ? {
+          where: {
+            userId,
+          },
+          select: {
+            status: true,
+            role: true,
+          },
+        } : false,
         _count: {
           select: {
             members: {
@@ -468,8 +562,67 @@ export async function getProjects(filters?: {
       },
     });
 
-    return projects;
-  } catch (error) {
+    // Debug: Log results in marketplace mode
+    if (filters?.marketplace) {
+      console.log(`[MARKETPLACE] Found ${projects.length} public projects`);
+      projects.forEach((p: any) => {
+        console.log(`  - "${p.title}" (visibility: ${p.visibility}, owner: ${p.owner.email})`);
+      });
+      
+      // Also check ALL projects to see what's in the database
+      try {
+        const allProjectsCheck = await prisma.project.findMany({
+          select: {
+            id: true,
+            title: true,
+            visibility: true,
+            owner: {
+              select: {
+                email: true,
+              },
+            },
+          },
+          take: 20,
+        });
+        console.log(`[MARKETPLACE DEBUG] Total projects in DB (first 20):`, allProjectsCheck.map(p => ({
+          title: p.title,
+          visibility: p.visibility,
+          owner: p.owner.email,
+        })));
+        console.log(`[MARKETPLACE DEBUG] Public projects count:`, allProjectsCheck.filter(p => p.visibility === 'PUBLIC').length);
+      } catch (e) {
+        console.error("[MARKETPLACE DEBUG] Error checking all projects:", e);
+      }
+    }
+
+    // Add membership info to each project
+    const projectsWithMembership = projects.map((project: any) => {
+      const userMembership = project.members?.[0] || null;
+      const isOwner = project.ownerId === userId;
+      const isMember = userMembership?.status === "ACTIVE";
+      const hasPendingRequest = userMembership?.status === "PENDING";
+      
+      return {
+        ...project,
+        isOwner,
+        isMember,
+        hasPendingRequest,
+        membershipStatus: userMembership?.status || null,
+        membershipRole: userMembership?.role || null,
+      };
+    });
+
+    return projectsWithMembership;
+  } catch (error: any) {
+    // Check if it's a connection error
+    if (
+      error?.message?.includes("Can't reach database") ||
+      error?.message?.includes("connect ECONNREFUSED") ||
+      error?.code === "P1001"
+    ) {
+      console.warn("Database not available - returning empty projects list");
+      return [];
+    }
     console.error("Error fetching projects from database:", error);
     // Return empty array if database query fails
     return [];
@@ -544,15 +697,30 @@ export async function changeProjectStatus(
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true, status: true, title: true },
+    include: {
+      members: {
+        where: {
+          userId,
+          status: "ACTIVE",
+        },
+        select: {
+          role: true,
+        },
+      },
+    },
   });
 
   if (!project) {
     throw new Error("Project not found");
   }
 
-  if (project.ownerId !== userId && !isAdmin(session.user.role)) {
-    throw new Error("Unauthorized");
+  const isOwner = project.ownerId === userId;
+  const isCoOwner = project.members.some(m => m.role === "PI");
+  const isAdminUser = isAdmin(session.user.role);
+
+  // Owner, co-owner (PI), or admin can change status
+  if (!isOwner && !isCoOwner && !isAdminUser) {
+    throw new Error("Unauthorized: Solo el propietario o co-propietario pueden cambiar el estado");
   }
 
   const updated = await prisma.project.update({
@@ -581,15 +749,30 @@ export async function toggleVisibility(projectId: string) {
 
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { ownerId: true, visibility: true },
+    include: {
+      members: {
+        where: {
+          userId,
+          status: "ACTIVE",
+        },
+        select: {
+          role: true,
+        },
+      },
+    },
   });
 
   if (!project) {
     throw new Error("Project not found");
   }
 
-  if (project.ownerId !== userId && !isAdmin(session.user.role)) {
-    throw new Error("Unauthorized");
+  const isOwner = project.ownerId === userId;
+  const isCoOwner = project.members.some(m => m.role === "PI");
+  const isAdminUser = isAdmin(session.user.role);
+
+  // Owner, co-owner (PI), or admin can toggle visibility
+  if (!isOwner && !isCoOwner && !isAdminUser) {
+    throw new Error("Unauthorized: Solo el propietario o co-propietario pueden cambiar la visibilidad");
   }
 
   const newVisibility = project.visibility === "PUBLIC" ? "PRIVATE" : "PUBLIC";

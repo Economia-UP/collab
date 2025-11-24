@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI || `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/github/oauth/callback`;
+const GITHUB_REDIRECT_URI_BASE = process.env.GITHUB_REDIRECT_URI || `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/github/oauth/callback`;
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     if (!code || !state) {
       return NextResponse.redirect(
-        new URL("/settings?error=missing_params", req.url)
+        new URL("/settings?error=Parámetros faltantes", req.url)
       );
     }
 
@@ -31,9 +31,11 @@ export async function GET(req: NextRequest) {
     
     if (session.user.id !== userId) {
       return NextResponse.redirect(
-        new URL("/settings?error=invalid_state", req.url)
+        new URL("/settings?error=Estado inválido", req.url)
       );
     }
+
+    const redirectUri = GITHUB_REDIRECT_URI_BASE;
 
     // Exchange code for access token
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
         client_id: GITHUB_CLIENT_ID,
         client_secret: GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri: GITHUB_REDIRECT_URI,
+        redirect_uri: redirectUri,
       }),
     });
 
@@ -83,6 +85,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Simple redirect back to settings
     return NextResponse.redirect(
       new URL("/settings?github_connected=true", req.url)
     );

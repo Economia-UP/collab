@@ -11,18 +11,20 @@ export async function GET(req: NextRequest) {
     const session = await requireAuth();
     
     if (!DROPBOX_CLIENT_ID) {
-      return NextResponse.json(
-        { error: "Dropbox OAuth no configurado" },
-        { status: 500 }
+      // Simple redirect to settings with error
+      return NextResponse.redirect(
+        new URL("/settings?error=Dropbox OAuth no configurado", req.url)
       );
     }
 
     // Generate state token for security
     const state = Buffer.from(`${session.user.id}:${Date.now()}`).toString("base64");
 
+    const redirectUri = DROPBOX_REDIRECT_URI;
+
     const params = new URLSearchParams({
       client_id: DROPBOX_CLIENT_ID,
-      redirect_uri: DROPBOX_REDIRECT_URI,
+      redirect_uri: redirectUri,
       response_type: "code",
       token_access_type: "offline",
       scope: "files.content.read files.content.write sharing.write account_info.read",
@@ -34,9 +36,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(dropboxAuthUrl);
   } catch (error) {
     console.error("Dropbox OAuth error:", error);
-    return NextResponse.json(
-      { error: "Error al iniciar autenticación con Dropbox" },
-      { status: 500 }
+    return NextResponse.redirect(
+      new URL("/settings?error=Error al iniciar autenticación con Dropbox", req.url)
     );
   }
 }

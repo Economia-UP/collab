@@ -11,26 +11,20 @@ export async function GET(req: NextRequest) {
     const session = await requireAuth();
     
     if (!GITHUB_CLIENT_ID) {
-      return NextResponse.json(
-        { error: "GitHub OAuth no configurado" },
-        { status: 500 }
+      // Simple redirect to settings with error
+      return NextResponse.redirect(
+        new URL("/settings?error=GitHub OAuth no configurado", req.url)
       );
     }
 
-    // Generate state token for security
+    // Generate state token for security (includes userId for verification)
     const state = Buffer.from(`${session.user.id}:${Date.now()}`).toString("base64");
-    
-    // Store state in user session or database temporarily
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        githubAccessToken: state, // Temporary storage
-      },
-    });
+
+    const redirectUri = GITHUB_REDIRECT_URI;
 
     const params = new URLSearchParams({
       client_id: GITHUB_CLIENT_ID,
-      redirect_uri: GITHUB_REDIRECT_URI,
+      redirect_uri: redirectUri,
       scope: "repo user:email",
       state: state,
     });
@@ -40,9 +34,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(githubAuthUrl);
   } catch (error) {
     console.error("GitHub OAuth error:", error);
-    return NextResponse.json(
-      { error: "Error al iniciar autenticación con GitHub" },
-      { status: 500 }
+    return NextResponse.redirect(
+      new URL("/settings?error=Error al iniciar autenticación con GitHub", req.url)
     );
   }
 }
