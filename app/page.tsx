@@ -10,7 +10,14 @@ import { FeaturesSection } from "@/components/features-section";
 import { ProjectsSection } from "@/components/projects-section";
 
 export default async function HomePage() {
-  const session = await getSession();
+  let session = null;
+  try {
+    session = await getSession();
+  } catch (error) {
+    console.error("Error loading session:", error);
+    // Continue without session - page should still render
+  }
+  
   const sampleProjects = [
     {
       id: 1,
