@@ -17,9 +17,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { createProject } from "@/app/actions/projects";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { Visibility, ProjectStatus } from "@prisma/client";
+import { useState, useEffect } from "react";
+import { Visibility, ProjectStatus, ProjectRole } from "@prisma/client";
 import { updateProject } from "@/app/actions/projects";
+import { inviteMembers, getProjectMembers } from "@/app/actions/memberships";
 
 const projectSchema = z.object({
   title: z.string().min(1, "El título es requerido").max(200),
@@ -129,6 +130,31 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
 
   const visibility = watch("visibility");
   const status = watch("status");
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // Load existing members when editing
+  useEffect(() => {
+    if (projectId) {
+      setLoadingMembers(true);
+      getProjectMembers(projectId)
+        .then((members) => {
+          const coOwners = members
+            .filter(m => m.role === "PI" && m.status === "ACTIVE")
+            .map(m => m.user.email);
+          const collaborators = members
+            .filter(m => m.role !== "PI" && m.status === "ACTIVE")
+            .map(m => m.user.email);
+          setCoOwnerEmails(coOwners);
+          setInviteEmails(collaborators);
+        })
+        .catch((error) => {
+          console.error("Error loading members:", error);
+        })
+        .finally(() => {
+          setLoadingMembers(false);
+        });
+    }
+  }, [projectId]);
 
   const toggleLanguage = (lang: string) => {
     const newLangs = programmingLangs.includes(lang)
@@ -242,13 +268,22 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           visibility: data.visibility,
           status: data.status,
         });
+
+        // Update members if emails were added
+        if (coOwnerEmails.length > 0) {
+          await inviteMembers(projectId, coOwnerEmails, "PI");
+        }
+        if (inviteEmails.length > 0) {
+          await inviteMembers(projectId, inviteEmails, "CO_AUTHOR");
+        }
+
         toast({
           title: "Proyecto actualizado",
           description: "El proyecto se ha actualizado correctamente.",
         });
         router.push(`/projects/${projectId}`);
       } else {
-        await createProject({
+        const project = await createProject({
           ...data,
           programmingLangs,
           libraries: libraries,
@@ -556,12 +591,16 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
         </CardContent>
       </Card>
 
-      {!projectId && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Colaboradores (Opcional)</CardTitle>
-            <CardDescription>Invita colaboradores o asigna co-propietarios al crear el proyecto</CardDescription>
-          </CardHeader>
+      <Card>
+        <CardHeader>
+          <CardTitle>Colaboradores {projectId ? "" : "(Opcional)"}</CardTitle>
+          <CardDescription>
+            {projectId 
+              ? "Gestiona colaboradores y co-propietarios del proyecto"
+              : "Invita colaboradores o asigna co-propietarios al crear el proyecto"
+            }
+          </CardDescription>
+        </CardHeader>
           <CardContent className="space-y-6">
             {/* Co-Propietarios */}
             <div className="space-y-2">

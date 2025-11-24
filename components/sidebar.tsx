@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SidebarStats } from "@/components/sidebar-stats";
 
 const navigation = [
   { name: "Inicio", href: "/", icon: Home },
@@ -113,6 +114,11 @@ export function Sidebar() {
               </motion.div>
             ))}
           </div>
+        </div>
+
+        {/* Stats Section */}
+        <div className="border-t pt-4 mt-4">
+          <SidebarStats />
         </div>
 
         {/* Help Section */}

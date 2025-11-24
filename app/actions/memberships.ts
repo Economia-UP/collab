@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAuth, isAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { MembershipStatus } from "@prisma/client";
+import { MembershipStatus, ProjectRole } from "@prisma/client";
 
 export async function requestMembership(projectId: string, message?: string) {
   const session = await requireAuth();
@@ -141,7 +141,7 @@ export async function rejectMembership(projectId: string, userId: string) {
     throw new Error("Unauthorized");
   }
 
-  const membership = await prisma.projectMember.update({
+  await prisma.projectMember.update({
     where: {
       projectId_userId: {
         projectId,
@@ -151,13 +151,6 @@ export async function rejectMembership(projectId: string, userId: string) {
     data: {
       status: "REJECTED",
     },
-    include: {
-      user: {
-        select: {
-          name: true,
-        },
-      },
-    },
   });
 
   await prisma.activityLog.create({
@@ -165,13 +158,14 @@ export async function rejectMembership(projectId: string, userId: string) {
       projectId,
       actorId: currentUserId,
       type: "MEMBER_REJECTED",
-      message: `Solicitud de ${membership.user.name || "usuario"} rechazada`,
+      message: `Solicitud de membresía rechazada`,
     },
   });
 
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/my-projects");
 
-  return membership;
+  return { success: true };
 }
 
 export async function removeMember(projectId: string, userId: string) {
@@ -187,8 +181,12 @@ export async function removeMember(projectId: string, userId: string) {
     throw new Error("Project not found");
   }
 
-  if (project.ownerId !== currentUserId && !isAdmin(session.user.role) && userId !== currentUserId) {
+  if (project.ownerId !== currentUserId && !isAdmin(session.user.role)) {
     throw new Error("Unauthorized");
+  }
+
+  if (project.ownerId === userId) {
+    throw new Error("No puedes remover al propietario del proyecto");
   }
 
   await prisma.projectMember.update({
@@ -238,3 +236,90 @@ export async function getProjectMembers(projectId: string) {
   return project.members;
 }
 
+// New function to invite members by email
+export async function inviteMembers(
+  projectId: string,
+  emails: string[],
+  role: ProjectRole = "CO_AUTHOR"
+) {
+  const session = await requireAuth();
+  const currentUserId = session.user.id;
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { ownerId: true, title: true },
+  });
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  if (project.ownerId !== currentUserId && !isAdmin(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  const invitedUsers = [];
+
+  for (const email of emails) {
+    if (!email || !email.endsWith("@up.edu.mx")) continue;
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.trim() },
+    });
+
+    if (user && user.id !== currentUserId) {
+      // Check if already a member
+      const existing = await prisma.projectMember.findUnique({
+        where: {
+          projectId_userId: {
+            projectId,
+            userId: user.id,
+          },
+        },
+      });
+
+      if (!existing) {
+        await prisma.projectMember.create({
+          data: {
+            projectId,
+            userId: user.id,
+            status: "ACTIVE",
+            role: role,
+          },
+        });
+
+        invitedUsers.push(user);
+
+        await prisma.activityLog.create({
+          data: {
+            projectId,
+            actorId: currentUserId,
+            type: "MEMBER_APPROVED",
+            message: `${user.name || user.email} fue invitado como ${role === "PI" ? "co-propietario" : "colaborador"}`,
+          },
+        });
+      } else if (existing.status !== "ACTIVE") {
+        // Reactivate if previously left or rejected
+        await prisma.projectMember.update({
+          where: {
+            projectId_userId: {
+              projectId,
+              userId: user.id,
+            },
+          },
+          data: {
+            status: "ACTIVE",
+            role: role,
+          },
+        });
+
+        invitedUsers.push(user);
+      }
+    }
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/my-projects");
+
+  return { success: true, invited: invitedUsers.length };
+}

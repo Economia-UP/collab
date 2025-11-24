@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/sidebar";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { fadeIn } from "@/lib/animations";
 
@@ -38,6 +38,7 @@ export function DashboardLayout({ children, session }: DashboardLayoutProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
+            <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
             <Sidebar />
           </SheetContent>
         </Sheet>

@@ -98,9 +98,15 @@ export function ProjectsFilter() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar proyectos..."
+              placeholder="Buscar por título, descripción, tema..."
               value={currentSearch}
               onChange={(e) => updateSearchParams("search", e.target.value || null)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  updateSearchParams("search", currentSearch || null);
+                }
+              }}
               className="pl-9"
             />
           </div>
