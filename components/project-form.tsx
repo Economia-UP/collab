@@ -50,7 +50,7 @@ const topics = [
 
 const categories = ["Tesis", "Paper", "Grant", "Proyecto", "Otro"];
 
-const commonLanguages = ["R", "Python", "Stata", "MATLAB", "Julia", "JavaScript", "Java", "C++", "SQL"];
+const commonLanguages = ["R", "Python", "Stata", "Eviews", "MATLAB", "Julia", "JavaScript", "Java", "C++", "SQL"];
 
 export function ProjectForm({ projectId, initialData }: { projectId?: string; initialData?: Partial<ProjectFormData> }) {
   const router = useRouter();

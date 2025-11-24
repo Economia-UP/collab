@@ -233,9 +233,32 @@ export async function getNotifications() {
         select: {
           id: true,
           name: true,
+          email: true,
           image: true,
         },
       },
+      project: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 5,
+  });
+
+  // Get recent tasks assigned to user
+  const recentTasks = await prisma.task.findMany({
+    where: {
+      assigneeId: userId,
+      status: {
+        not: "DONE",
+      },
+    },
+    include: {
       project: {
         select: {
           id: true,
@@ -257,7 +280,12 @@ export async function getNotifications() {
       message: `${request.user.name || request.user.email} solicitó unirse a "${request.project.title}"`,
       createdAt: request.createdAt,
       project: request.project,
-      user: request.user,
+      user: {
+        id: request.user.id,
+        name: request.user.name,
+        email: request.user.email,
+        image: request.user.image,
+      },
       data: {
         projectId: request.project.id,
         memberId: request.id,
@@ -266,13 +294,34 @@ export async function getNotifications() {
     ...recentComments.map((comment) => ({
       id: `comment-${comment.id}`,
       type: "COMMENT_ADDED" as const,
-      message: `${comment.author.name || comment.author.id} comentó en "${comment.project.title}"`,
+      message: `${comment.author.name || comment.author.email || "Alguien"} comentó en "${comment.project.title}"`,
       createdAt: comment.createdAt,
       project: comment.project,
-      user: comment.author,
+      user: {
+        id: comment.author.id,
+        name: comment.author.name,
+        email: comment.author.email,
+        image: comment.author.image,
+      },
       data: {
         projectId: comment.project.id,
         commentId: comment.id,
+      },
+    })),
+    ...recentTasks.map((task) => ({
+      id: `task-${task.id}`,
+      type: "TASK_CREATED" as const,
+      message: `Nueva tarea asignada: "${task.title}" en "${task.project.title}"`,
+      createdAt: task.createdAt,
+      project: task.project,
+      user: {
+        id: userId,
+        name: null,
+        email: null,
+        image: null,
+      },
+      data: {
+        projectId: task.project.id,
       },
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 10);

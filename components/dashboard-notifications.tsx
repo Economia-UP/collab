@@ -8,12 +8,12 @@ import { motion } from "framer-motion";
 import { fadeInUp } from "@/lib/animations";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { Bell, UserPlus, MessageSquare } from "lucide-react";
+import { Bell, UserPlus, MessageSquare, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Notification {
   id: string;
-  type: "MEMBER_JOIN_REQUEST" | "COMMENT_ADDED";
+  type: "MEMBER_JOIN_REQUEST" | "COMMENT_ADDED" | "TASK_CREATED" | "MEMBER_APPROVED";
   message: string;
   createdAt: Date;
   project: {
@@ -23,6 +23,7 @@ interface Notification {
   user: {
     id: string;
     name: string | null;
+    email?: string;
     image: string | null;
   };
   data: {
@@ -42,6 +43,10 @@ const getNotificationIcon = (type: string) => {
       return <UserPlus className="h-4 w-4 text-azul" />;
     case "COMMENT_ADDED":
       return <MessageSquare className="h-4 w-4 text-vino" />;
+    case "TASK_CREATED":
+      return <FileText className="h-4 w-4 text-verde" />;
+    case "MEMBER_APPROVED":
+      return <UserPlus className="h-4 w-4 text-dorado" />;
     default:
       return <Bell className="h-4 w-4" />;
   }
@@ -53,6 +58,10 @@ const getNotificationColor = (type: string) => {
       return "border-azul/30 bg-azul/5";
     case "COMMENT_ADDED":
       return "border-vino/30 bg-vino/5";
+    case "TASK_CREATED":
+      return "border-verde/30 bg-verde/5";
+    case "MEMBER_APPROVED":
+      return "border-dorado/30 bg-dorado/5";
     default:
       return "border-dorado/30 bg-dorado/5";
   }
