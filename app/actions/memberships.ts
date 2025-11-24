@@ -120,25 +120,34 @@ export async function approveMembership(projectId: string, userId: string) {
     },
   });
 
-  // Share Google Drive folder if exists
+  // Share Google Drive and Dropbox folders if exist
   const project = await prisma.project.findUnique({
     where: { id: projectId },
-    select: { googleDriveFolderId: true },
+    select: { googleDriveFolderId: true, dropboxFolderId: true },
   });
 
-  if (project?.googleDriveFolderId) {
-    try {
-      const memberUser = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { email: true },
-      });
+  const memberUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
 
-      if (memberUser?.email) {
+  if (memberUser?.email) {
+    if (project?.googleDriveFolderId) {
+      try {
         await shareGoogleDriveFolderWithMember(projectId, memberUser.email, "writer");
+      } catch (error) {
+        console.error("Failed to share Google Drive folder:", error);
+        // Don't fail the membership approval if Google Drive sharing fails
       }
-    } catch (error) {
-      console.error("Failed to share Google Drive folder:", error);
-      // Don't fail the membership approval if Google Drive sharing fails
+    }
+
+    if (project?.dropboxFolderId) {
+      try {
+        await shareDropboxFolderWithMember(projectId, memberUser.email);
+      } catch (error) {
+        console.error("Failed to share Dropbox folder:", error);
+        // Don't fail the membership approval if Dropbox sharing fails
+      }
     }
   }
 
