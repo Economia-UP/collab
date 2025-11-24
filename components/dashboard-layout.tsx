@@ -44,7 +44,9 @@ export function DashboardLayout({ children, session }: DashboardLayoutProps) {
 
         {/* Main Content */}
         <motion.main
-          {...fadeIn}
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
           className="flex-1 overflow-y-auto"
         >
           <div className="container mx-auto p-6">{children}</div>

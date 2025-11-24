@@ -144,14 +144,31 @@ export async function getProjects(filters?: {
   hasGithub?: boolean;
   hasOverleaf?: boolean;
 }) {
-  const session = await requireAuth();
-  const userId = session.user.id;
-  const isUserAdmin = isAdmin(session.user.role);
+  // Try to get session, but don't require it (for public projects page)
+  let session = null;
+  let userId: string | null = null;
+  let isUserAdmin = false;
+  
+  try {
+    const authSession = await requireAuth();
+    session = authSession;
+    userId = authSession.user.id;
+    isUserAdmin = isAdmin(authSession.user.role);
+  } catch (error) {
+    // No session - user is not authenticated, can only see public projects
+    session = null;
+    userId = null;
+    isUserAdmin = false;
+  }
 
   const where: any = {};
 
   // Visibility filter
-  if (!isUserAdmin) {
+  if (!userId) {
+    // No authenticated user - only show public projects
+    where.visibility = "PUBLIC";
+  } else if (!isUserAdmin) {
+    // Authenticated but not admin - show public, owned, or member projects
     where.OR = [
       { visibility: "PUBLIC" },
       { ownerId: userId },
@@ -165,6 +182,7 @@ export async function getProjects(filters?: {
       },
     ];
   } else if (filters?.visibility) {
+    // Admin with visibility filter
     where.visibility = filters.visibility;
   }
 

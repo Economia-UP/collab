@@ -27,8 +27,17 @@ export default async function ProjectsPage({
     hasOverleaf: searchParams.hasOverleaf === "true",
   };
 
-  const session = await getSession();
-  const projects = await getProjects(filters);
+  let session = null;
+  let projects = [];
+  
+  try {
+    session = await getSession();
+    projects = await getProjects(filters);
+  } catch (error) {
+    console.error("Error loading projects:", error);
+    // Continue with empty projects list
+    projects = [];
+  }
 
   return (
     <DashboardLayout session={session}>
