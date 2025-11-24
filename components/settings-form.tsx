@@ -44,6 +44,8 @@ export function SettingsForm({ user }: SettingsFormProps) {
 
   useEffect(() => {
     const githubConnected = searchParams.get("github_connected");
+    const googleDriveConnected = searchParams.get("google_drive_connected");
+    const dropboxConnected = searchParams.get("dropbox_connected");
     const error = searchParams.get("error");
     
     if (githubConnected === "true") {
@@ -51,10 +53,20 @@ export function SettingsForm({ user }: SettingsFormProps) {
         title: "GitHub conectado",
         description: "Tu cuenta de GitHub se ha conectado correctamente.",
       });
+    } else if (googleDriveConnected === "true") {
+      toast({
+        title: "Google Drive conectado",
+        description: "Tu cuenta de Google Drive se ha conectado correctamente.",
+      });
+    } else if (dropboxConnected === "true") {
+      toast({
+        title: "Dropbox conectado",
+        description: "Tu cuenta de Dropbox se ha conectado correctamente.",
+      });
     } else if (error) {
       toast({
         title: "Error",
-        description: `Error al conectar GitHub: ${error}`,
+        description: `Error al conectar: ${error}`,
         variant: "destructive",
       });
     }
