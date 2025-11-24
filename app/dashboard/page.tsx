@@ -13,6 +13,10 @@ import { DashboardActivity } from "@/components/dashboard-activity";
 import { DashboardRecentProjects } from "@/components/dashboard-recent-projects";
 import { DashboardPendingTasks } from "@/components/dashboard-pending-tasks";
 import { DashboardNotifications } from "@/components/dashboard-notifications";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
@@ -77,6 +81,45 @@ export default async function DashboardPage() {
           <DashboardRecentProjects projects={recentProjects} />
           <DashboardPendingTasks tasks={pendingTasks} />
         </div>
+
+        {/* All Projects Section */}
+        {recentProjects.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold tracking-tight">Todos mis Proyectos</h2>
+              <Button asChild variant="outline">
+                <Link href="/my-projects">Ver todos</Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {recentProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  className="block"
+                >
+                  <Card className="h-full hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-lg line-clamp-2">{project.title}</CardTitle>
+                        <StatusBadge status={project.status as any} />
+                      </div>
+                      <CardDescription className="line-clamp-2">
+                        {project.shortSummary || "Sin descripción"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>{project._count.members} miembros</span>
+                        <span>{project._count.tasks} tareas</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Notifications Row */}
         <DashboardNotifications notifications={notifications} />

@@ -89,48 +89,53 @@ export async function getRecentActivity() {
 }
 
 export async function getRecentProjects() {
-  const session = await requireAuth();
-  const userId = session.user.id;
+  try {
+    const session = await requireAuth();
+    const userId = session.user.id;
 
-  const projects = await prisma.project.findMany({
-    where: {
-      OR: [
-        { ownerId: userId },
-        {
-          members: {
-            some: {
-              userId,
-              status: "ACTIVE",
+    const projects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { ownerId: userId },
+          {
+            members: {
+              some: {
+                userId,
+                status: "ACTIVE",
+              },
             },
           },
-        },
-      ],
-    },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-        },
+        ],
       },
-      _count: {
-        select: {
-          members: {
-            where: { status: "ACTIVE" },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
           },
-          tasks: true,
+        },
+        _count: {
+          select: {
+            members: {
+              where: { status: "ACTIVE" },
+            },
+            tasks: true,
+          },
         },
       },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 6,
-  });
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 10, // Increased from 6 to show more projects
+    });
 
-  return projects;
+    return projects;
+  } catch (error) {
+    console.error("Error in getRecentProjects:", error);
+    return [];
+  }
 }
 
 export async function getPendingTasks() {

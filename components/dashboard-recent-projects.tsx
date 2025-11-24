@@ -41,7 +41,7 @@ export function DashboardRecentProjects({ projects }: DashboardRecentProjectsPro
             Proyectos Recientes
           </CardTitle>
           <CardDescription>
-            Tus proyectos más recientes
+            Tus proyectos más recientes (propios y colaboraciones)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -91,6 +91,11 @@ export function DashboardRecentProjects({ projects }: DashboardRecentProjectsPro
                         <span>{project._count.members} miembros</span>
                         <span>{project._count.tasks} tareas</span>
                       </div>
+                      {project.owner && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Por: {project.owner.name || project.owner.email}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </Link>
