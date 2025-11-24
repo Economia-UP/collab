@@ -13,6 +13,7 @@ import { FolderKanban, Clock } from "lucide-react";
 interface Project {
   id: string;
   title: string;
+  shortSummary?: string | null;
   status: string;
   updatedAt: Date;
   owner: {

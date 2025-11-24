@@ -107,7 +107,12 @@ export async function getRecentProjects() {
           },
         ],
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        shortSummary: true,
+        status: true,
+        updatedAt: true,
         owner: {
           select: {
             id: true,
