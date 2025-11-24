@@ -363,6 +363,28 @@ export async function inviteMembers(
             message: `${user.name || user.email} fue invitado como ${role === "PI" ? "co-propietario" : "colaborador"}`,
           },
         });
+
+        // Share Google Drive and Dropbox folders if exist
+        const projectWithFolders = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { googleDriveFolderId: true, dropboxFolderId: true },
+        });
+
+        if (projectWithFolders?.googleDriveFolderId) {
+          try {
+            await shareGoogleDriveFolderWithMember(projectId, user.email, "writer");
+          } catch (error) {
+            console.error("Failed to share Google Drive folder:", error);
+          }
+        }
+
+        if (projectWithFolders?.dropboxFolderId) {
+          try {
+            await shareDropboxFolderWithMember(projectId, user.email);
+          } catch (error) {
+            console.error("Failed to share Dropbox folder:", error);
+          }
+        }
       } else if (existing.status !== "ACTIVE") {
         // Reactivate if previously left or rejected
         await prisma.projectMember.update({
