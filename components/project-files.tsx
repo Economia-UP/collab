@@ -14,6 +14,13 @@ import {
   File
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { createProjectDropboxFolder } from "@/app/actions/dropbox";
+import { createProjectGoogleDriveFolder } from "@/app/actions/google-drive";
+import { useOAuthRequired } from "@/hooks/use-oauth-required";
+import { OAuthConnectionDialog } from "./oauth-connection-dialog";
 
 interface ProjectFilesProps {
   project: {
@@ -30,15 +37,96 @@ interface ProjectFilesProps {
   };
   isOwner: boolean;
   isMember: boolean;
+  userHasGoogleDrive?: boolean;
+  userHasDropbox?: boolean;
 }
 
-export function ProjectFiles({ project, isOwner, isMember }: ProjectFilesProps) {
+export function ProjectFiles({ 
+  project, 
+  isOwner, 
+  isMember,
+  userHasGoogleDrive = false,
+  userHasDropbox = false
+}: ProjectFilesProps) {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isCreatingDropbox, setIsCreatingDropbox] = useState(false);
+  const [isCreatingGoogleDrive, setIsCreatingGoogleDrive] = useState(false);
+
   const hasGoogleDrive = !!project.googleDriveFolderId;
   const hasDropbox = !!project.dropboxFolderId;
   const hasGithub = !!project.githubRepoUrl;
   const hasOverleaf = !!project.overleafProjectUrl;
 
   const canAccess = isOwner || isMember;
+
+  const { executeWithAuth: executeWithDropbox, Dialog: DropboxDialog } = useOAuthRequired({
+    provider: "dropbox",
+    context: "para crear una carpeta de Dropbox para este proyecto",
+    onConnected: () => {
+      handleCreateDropboxFolder();
+    },
+  });
+
+  const { executeWithAuth: executeWithGoogleDrive, Dialog: GoogleDriveDialog } = useOAuthRequired({
+    provider: "google-drive",
+    context: "para crear una carpeta de Google Drive para este proyecto",
+    onConnected: () => {
+      handleCreateGoogleDriveFolder();
+    },
+  });
+
+  const handleCreateDropboxFolder = async () => {
+    try {
+      setIsCreatingDropbox(true);
+      await executeWithDropbox(async () => {
+        await createProjectDropboxFolder(project.id);
+        return true;
+      });
+      toast({
+        title: "Carpeta creada",
+        description: "La carpeta de Dropbox se ha creado exitosamente.",
+      });
+      router.refresh();
+    } catch (error) {
+      if (error instanceof Error && error.message === "OAUTH_REQUIRED") {
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo crear la carpeta",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingDropbox(false);
+    }
+  };
+
+  const handleCreateGoogleDriveFolder = async () => {
+    try {
+      setIsCreatingGoogleDrive(true);
+      await executeWithGoogleDrive(async () => {
+        await createProjectGoogleDriveFolder(project.id);
+        return true;
+      });
+      toast({
+        title: "Carpeta creada",
+        description: "La carpeta de Google Drive se ha creado exitosamente.",
+      });
+      router.refresh();
+    } catch (error) {
+      if (error instanceof Error && error.message === "OAUTH_REQUIRED") {
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo crear la carpeta",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingGoogleDrive(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -112,9 +200,22 @@ export function ProjectFiles({ project, isOwner, isMember }: ProjectFilesProps) 
                 No hay carpeta de Google Drive conectada
               </p>
               {isOwner && (
-                <p className="text-sm text-muted-foreground">
-                  Puedes crear una carpeta desde la sección de Integraciones
-                </p>
+                <Button
+                  onClick={handleCreateGoogleDriveFolder}
+                  disabled={isCreatingGoogleDrive || !userHasGoogleDrive}
+                  variant={userHasGoogleDrive ? "default" : "outline"}
+                >
+                  {isCreatingGoogleDrive ? (
+                    "Creando..."
+                  ) : userHasGoogleDrive ? (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear Carpeta
+                    </>
+                  ) : (
+                    "Conectar Google Drive"
+                  )}
+                </Button>
               )}
             </div>
           )}
@@ -184,9 +285,22 @@ export function ProjectFiles({ project, isOwner, isMember }: ProjectFilesProps) 
                 No hay carpeta de Dropbox conectada
               </p>
               {isOwner && (
-                <p className="text-sm text-muted-foreground">
-                  Puedes crear una carpeta desde la sección de Integraciones
-                </p>
+                <Button
+                  onClick={handleCreateDropboxFolder}
+                  disabled={isCreatingDropbox || !userHasDropbox}
+                  variant={userHasDropbox ? "default" : "outline"}
+                >
+                  {isCreatingDropbox ? (
+                    "Creando..."
+                  ) : userHasDropbox ? (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear Carpeta
+                    </>
+                  ) : (
+                    "Conectar Dropbox"
+                  )}
+                </Button>
               )}
             </div>
           )}
@@ -347,6 +461,9 @@ export function ProjectFiles({ project, isOwner, isMember }: ProjectFilesProps) 
           </div>
         </CardContent>
       </Card>
+
+      {DropboxDialog}
+      {GoogleDriveDialog}
     </div>
   );
 }

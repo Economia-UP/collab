@@ -16,6 +16,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { motion } from "framer-motion";
 import { fadeInDown } from "@/lib/animations";
 import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
 
 interface NavbarProps {
   session?: {
@@ -51,11 +52,18 @@ export function Navbar({ session }: NavbarProps) {
         >
           <Link href="/" className="flex items-center space-x-2">
             <span className="text-xl font-bold bg-gradient-to-r from-dorado to-azul bg-clip-text text-transparent">
-              Research Hub UP
+              Collaboration Hub
             </span>
           </Link>
           {session && (
             <nav className="hidden md:flex items-center gap-4">
+              <Link 
+                href="/search" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              >
+                <Search className="h-4 w-4" />
+                Búsqueda
+              </Link>
               <Link 
                 href="/projects" 
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"

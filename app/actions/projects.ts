@@ -289,48 +289,42 @@ export async function getProjects(filters?: {
   const where: any = {};
 
   // MARKETPLACE MODE: Show ALL public projects without any restrictions
+  // This mode ignores user authentication and ownership - shows all PUBLIC projects
   if (filters?.marketplace) {
-    // Start with visibility = PUBLIC (this is the only requirement)
+    // Base requirement: must be PUBLIC
     where.visibility = "PUBLIC";
 
-    // Add other filters as AND conditions
-    const additionalFilters: any[] = [];
-
+    // Add optional filters as AND conditions
     if (filters?.topic) {
-      additionalFilters.push({ topic: filters.topic });
+      where.topic = filters.topic;
     }
 
     if (filters?.category) {
-      additionalFilters.push({ category: filters.category });
+      where.category = filters.category;
     }
 
     if (filters?.status && filters.status.length > 0) {
-      additionalFilters.push({ status: { in: filters.status } });
+      where.status = { in: filters.status };
     }
 
     if (filters?.search) {
-      additionalFilters.push({
-        OR: [
-          { title: { contains: filters.search, mode: "insensitive" } },
-          { shortSummary: { contains: filters.search, mode: "insensitive" } },
-          { description: { contains: filters.search, mode: "insensitive" } },
-        ],
-      });
+      where.OR = [
+        { title: { contains: filters.search, mode: "insensitive" } },
+        { shortSummary: { contains: filters.search, mode: "insensitive" } },
+        { description: { contains: filters.search, mode: "insensitive" } },
+      ];
     }
 
     if (filters?.hasGithub) {
-      additionalFilters.push({ githubRepoUrl: { not: null } });
+      where.githubRepoUrl = { not: null };
     }
 
     if (filters?.hasOverleaf) {
-      additionalFilters.push({ overleafProjectUrl: { not: null } });
+      where.overleafProjectUrl = { not: null };
     }
 
-    // If we have additional filters, combine with AND
-    if (additionalFilters.length > 0) {
-      where.AND = [{ visibility: "PUBLIC" }, ...additionalFilters];
-      delete where.visibility; // Remove the direct visibility since it's in AND
-    }
+    // In marketplace mode, we don't care about ownership or membership
+    // Just show all public projects that match the filters
   } else if (!userId) {
     // No authenticated user - only show public projects
     where.visibility = "PUBLIC";
@@ -524,6 +518,7 @@ export async function getProjects(filters?: {
     // Debug: Log the where clause in marketplace mode
     if (filters?.marketplace) {
       console.log("[MARKETPLACE] Query filter:", JSON.stringify(where, null, 2));
+      console.log("[MARKETPLACE] Mode: Showing ALL public projects (ignoring ownership/membership)");
     }
 
     const projects = await prisma.project.findMany({
@@ -538,6 +533,8 @@ export async function getProjects(filters?: {
             role: true,
           },
         },
+        // In marketplace mode, include membership info if user is logged in (for UI display)
+        // But don't filter by it
         members: userId ? {
           where: {
             userId,
@@ -565,33 +562,25 @@ export async function getProjects(filters?: {
     // Debug: Log results in marketplace mode
     if (filters?.marketplace) {
       console.log(`[MARKETPLACE] Found ${projects.length} public projects`);
-      projects.forEach((p: any) => {
-        console.log(`  - "${p.title}" (visibility: ${p.visibility}, owner: ${p.owner.email})`);
-      });
-      
-      // Also check ALL projects to see what's in the database
-      try {
-        const allProjectsCheck = await prisma.project.findMany({
-          select: {
-            id: true,
-            title: true,
-            visibility: true,
-            owner: {
-              select: {
-                email: true,
-              },
-            },
-          },
-          take: 20,
+      if (projects.length > 0) {
+        projects.slice(0, 5).forEach((p: any) => {
+          console.log(`  - "${p.title}" (visibility: ${p.visibility}, owner: ${p.owner?.email || 'unknown'})`);
         });
-        console.log(`[MARKETPLACE DEBUG] Total projects in DB (first 20):`, allProjectsCheck.map(p => ({
-          title: p.title,
-          visibility: p.visibility,
-          owner: p.owner.email,
-        })));
-        console.log(`[MARKETPLACE DEBUG] Public projects count:`, allProjectsCheck.filter(p => p.visibility === 'PUBLIC').length);
-      } catch (e) {
-        console.error("[MARKETPLACE DEBUG] Error checking all projects:", e);
+        if (projects.length > 5) {
+          console.log(`  ... and ${projects.length - 5} more`);
+        }
+      } else {
+        console.log("[MARKETPLACE] No public projects found. Checking database...");
+        // Check if there are any public projects at all
+        try {
+          const publicCount = await prisma.project.count({
+            where: { visibility: "PUBLIC" },
+          });
+          const totalCount = await prisma.project.count();
+          console.log(`[MARKETPLACE DEBUG] Total projects: ${totalCount}, Public projects: ${publicCount}`);
+        } catch (e) {
+          console.error("[MARKETPLACE DEBUG] Error checking project counts:", e);
+        }
       }
     }
 

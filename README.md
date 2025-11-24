@@ -1,6 +1,6 @@
-# Research Collaboration Hub - Universidad Panamericana
+# Collaboration Hub - Universidad Panamericana
 
-Plataforma de colaboración para proyectos de investigación de la Universidad Panamericana.
+Plataforma de colaboración para proyectos de investigación y trabajo colaborativo de la Universidad Panamericana.
 
 <!-- Redeploy trigger -->
 

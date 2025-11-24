@@ -12,8 +12,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Research Hub UP - Plataforma de Colaboración",
-  description: "Hub de proyectos de investigación para la Universidad Panamericana",
+  title: "Collaboration Hub - Plataforma de Colaboración",
+  description: "Plataforma de colaboración para proyectos de investigación y trabajo colaborativo de la Universidad Panamericana",
 };
 
 export default function RootLayout({

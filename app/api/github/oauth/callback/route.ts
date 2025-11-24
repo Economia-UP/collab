@@ -35,7 +35,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const redirectUri = GITHUB_REDIRECT_URI_BASE;
+    // Construct redirect URI from request URL to ensure it matches
+    const baseUrl = new URL(req.url).origin;
+    const redirectUri = process.env.GITHUB_REDIRECT_URI || `${baseUrl}/api/github/oauth/callback`;
+    
+    // Log for debugging
+    console.log("GitHub OAuth Callback - Using redirect_uri:", redirectUri);
 
     // Exchange code for access token
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {

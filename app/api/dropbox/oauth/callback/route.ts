@@ -35,7 +35,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const redirectUri = DROPBOX_REDIRECT_URI_BASE;
+    // Construct redirect URI from request URL to ensure it matches
+    const baseUrl = new URL(req.url).origin;
+    const redirectUri = process.env.DROPBOX_REDIRECT_URI || `${baseUrl}/api/dropbox/oauth/callback`;
+    
+    // Log for debugging
+    console.log("Dropbox OAuth Callback - Using redirect_uri:", redirectUri);
 
     // Exchange code for access token
     const tokenResponse = await fetch("https://api.dropboxapi.com/oauth2/token", {

@@ -103,6 +103,30 @@ export async function listGoogleDriveFiles(
   return response.data.files || [];
 }
 
+/**
+ * List all folders in Google Drive (for selecting existing folder)
+ */
+export async function listGoogleDriveFolders(
+  accessToken: string,
+  refreshToken: string | undefined,
+  pageToken?: string
+) {
+  const drive = getGoogleDriveClient(accessToken, refreshToken);
+
+  const response = await drive.files.list({
+    q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
+    fields: "nextPageToken, files(id, name, webViewLink, modifiedTime, createdTime)",
+    orderBy: "modifiedTime desc",
+    pageSize: 50,
+    pageToken: pageToken,
+  });
+
+  return {
+    folders: response.data.files || [],
+    nextPageToken: response.data.nextPageToken || undefined,
+  };
+}
+
 export async function refreshGoogleDriveToken(refreshToken: string) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,

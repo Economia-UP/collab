@@ -65,7 +65,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="border-t bg-background py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 Research Hub UP - Universidad Panamericana</p>
+          <p>© 2024 Collaboration Hub - Universidad Panamericana</p>
         </div>
       </footer>
     </div>

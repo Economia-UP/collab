@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/animations";
-import { Github, FileText, Users } from "lucide-react";
+import { Github, FileText, Users, Bot, Calendar, Video } from "lucide-react";
 
 export function FeaturesSection() {
   const features = [
@@ -14,16 +14,34 @@ export function FeaturesSection() {
       color: "text-dorado",
     },
     {
-      icon: Github,
-      title: "Integración con GitHub",
-      description: "Conecta tus repositorios de código y mantén todo sincronizado",
+      icon: Bot,
+      title: "Asistente de IA",
+      description: "Obtén ayuda con documentación, código y planificación usando inteligencia artificial",
       color: "text-azul",
+    },
+    {
+      icon: Calendar,
+      title: "Calendario y Reuniones",
+      description: "Programa eventos, reuniones y sincroniza con Google Calendar",
+      color: "text-vino",
+    },
+    {
+      icon: Github,
+      title: "Integraciones",
+      description: "GitHub, Google Drive, Dropbox y más. Automatiza con n8n",
+      color: "text-success",
     },
     {
       icon: FileText,
       title: "Gestión de Tareas",
-      description: "Organiza tu investigación con tableros Kanban y seguimiento de actividades",
-      color: "text-vino",
+      description: "Organiza tu trabajo con tableros Kanban y seguimiento de actividades",
+      color: "text-dorado",
+    },
+    {
+      icon: Video,
+      title: "Reuniones Virtuales",
+      description: "Programa reuniones con Google Meet y Zoom integrados",
+      color: "text-azul",
     },
   ];
 
@@ -38,7 +56,7 @@ export function FeaturesSection() {
         >
           <h2 className="mb-4 text-4xl font-bold">Características principales</h2>
           <p className="text-lg text-muted-foreground">
-            Todo lo que necesitas para gestionar y colaborar en proyectos de investigación
+            Todo lo que necesitas para colaborar y gestionar proyectos de trabajo en equipo
           </p>
         </motion.div>
         
@@ -46,7 +64,7 @@ export function FeaturesSection() {
           initial="hidden"
           animate="visible"
           variants={staggerContainer}
-          className="grid gap-8 md:grid-cols-3"
+          className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
         >
           {features.map((feature, index) => {
             const Icon = feature.icon;

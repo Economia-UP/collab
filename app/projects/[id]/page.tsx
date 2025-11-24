@@ -6,6 +6,7 @@ import { getServerSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getSession } from "@/lib/auth-config";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +36,21 @@ export default async function ProjectDetailPage({
     const isAdmin = session?.user?.role === "ADMIN";
     const canEdit = isOwner || isCoOwner || isCollaborator || isAdmin;
 
+    // Get user's OAuth connection status
+    let userHasGoogleDrive = false;
+    let userHasDropbox = false;
+    if (session?.user?.id) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          googleDriveAccessToken: true,
+          dropboxAccessToken: true,
+        },
+      });
+      userHasGoogleDrive = !!user?.googleDriveAccessToken;
+      userHasDropbox = !!user?.dropboxAccessToken;
+    }
+
     return (
       <DashboardLayout session={authSession}>
         <div className="space-y-6">
@@ -56,6 +72,8 @@ export default async function ProjectDetailPage({
             isMember={isMember}
             isAdmin={isAdmin}
             currentUserId={session?.user?.id}
+            userHasGoogleDrive={userHasGoogleDrive}
+            userHasDropbox={userHasDropbox}
           />
         </div>
       </DashboardLayout>

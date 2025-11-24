@@ -32,10 +32,8 @@ export function HeroSection({ session }: HeroSectionProps) {
             className="mb-6 text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl"
           >
             <span className="bg-gradient-to-r from-dorado via-azul to-vino bg-clip-text text-transparent">
-              Hub de Proyectos
+              Collaboration Hub
             </span>
-            <br />
-            <span className="text-foreground">de Investigación</span>
           </motion.h1>
           
           <motion.p
@@ -44,10 +42,10 @@ export function HeroSection({ session }: HeroSectionProps) {
             variants={fadeInUp}
             className="mb-10 text-xl text-muted-foreground md:text-2xl"
           >
-            Plataforma de colaboración para investigadores de la{" "}
+            Plataforma de colaboración para trabajo en equipo de la{" "}
             <span className="font-semibold text-azul">Universidad Panamericana</span>.
             <br />
-            Conecta, colabora y avanza en tus proyectos de investigación.
+            Gestiona proyectos, colabora, programa reuniones y más.
           </motion.p>
           
           <motion.div

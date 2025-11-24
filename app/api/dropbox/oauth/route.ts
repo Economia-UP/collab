@@ -20,7 +20,12 @@ export async function GET(req: NextRequest) {
     // Generate state token for security
     const state = Buffer.from(`${session.user.id}:${Date.now()}`).toString("base64");
 
-    const redirectUri = DROPBOX_REDIRECT_URI;
+    // Construct redirect URI from request URL to ensure it matches the current domain
+    const baseUrl = new URL(req.url).origin;
+    const redirectUri = process.env.DROPBOX_REDIRECT_URI || `${baseUrl}/api/dropbox/oauth/callback`;
+    
+    // Log for debugging (remove in production if needed)
+    console.log("Dropbox OAuth - Using redirect_uri:", redirectUri);
 
     const params = new URLSearchParams({
       client_id: DROPBOX_CLIENT_ID,

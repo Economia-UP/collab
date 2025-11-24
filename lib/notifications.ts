@@ -11,7 +11,7 @@ const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_T
   ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   : null;
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@research-hub.up.edu.mx';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@collaboration-hub.up.edu.mx';
 const FROM_WHATSAPP = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
 
 export interface NotificationData {
@@ -55,7 +55,7 @@ export async function sendEmailNotification(data: NotificationData): Promise<boo
         <body>
           <div class="container">
             <div class="header">
-              <h1>Research Hub UP</h1>
+              <h1>Collaboration Hub</h1>
             </div>
             <div class="content">
               <h2>${data.subject}</h2>
@@ -64,7 +64,7 @@ export async function sendEmailNotification(data: NotificationData): Promise<boo
               ${data.projectTitle ? `<p><strong>Proyecto:</strong> ${data.projectTitle}</p>` : ''}
             </div>
             <div class="footer">
-              <p>Universidad Panamericana - Research Hub</p>
+              <p>Universidad Panamericana - Collaboration Hub</p>
               <p>Este es un correo automático, por favor no responder.</p>
             </div>
           </div>
@@ -91,8 +91,23 @@ export async function sendEmailNotification(data: NotificationData): Promise<boo
  * Send WhatsApp notification
  */
 export async function sendWhatsAppNotification(data: NotificationData): Promise<boolean> {
-  if (!twilioClient || !data.to.phoneNumber) {
-    console.warn('WhatsApp notification skipped: Twilio not configured or no phone number provided');
+  // Check if Twilio is configured
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+    console.warn(
+      'WhatsApp notification skipped: Twilio not configured. ' +
+      'Please set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN environment variables. ' +
+      'See TWILIO_SETUP.md for setup instructions.'
+    );
+    return false;
+  }
+
+  if (!twilioClient) {
+    console.error('WhatsApp notification skipped: Failed to initialize Twilio client');
+    return false;
+  }
+
+  if (!data.to.phoneNumber) {
+    console.warn('WhatsApp notification skipped: No phone number provided');
     return false;
   }
 
@@ -107,7 +122,7 @@ export async function sendWhatsAppNotification(data: NotificationData): Promise<
       ? phoneNumber
       : `whatsapp:${phoneNumber}`;
 
-    const message = `🔔 *${data.subject}*\n\n${data.message}${data.projectTitle ? `\n\n📁 Proyecto: ${data.projectTitle}` : ''}${data.actionUrl ? `\n\n🔗 Ver más: ${data.actionUrl}` : ''}\n\n_Research Hub UP_`;
+    const message = `🔔 *${data.subject}*\n\n${data.message}${data.projectTitle ? `\n\n📁 Proyecto: ${data.projectTitle}` : ''}${data.actionUrl ? `\n\n🔗 Ver más: ${data.actionUrl}` : ''}\n\n_Collaboration Hub_`;
 
     await twilioClient.messages.create({
       from: FROM_WHATSAPP,
@@ -118,7 +133,28 @@ export async function sendWhatsAppNotification(data: NotificationData): Promise<
     console.log(`WhatsApp notification sent to ${whatsappNumber}`);
     return true;
   } catch (error: any) {
-    console.error('Error sending WhatsApp notification:', error);
+    // Provide more detailed error information
+    const errorMessage = error?.message || 'Unknown error';
+    const errorCode = error?.code || 'UNKNOWN';
+    
+    console.error('Error sending WhatsApp notification:', {
+      error: errorMessage,
+      code: errorCode,
+      phoneNumber: data.to.phoneNumber,
+      twilioAccountSid: process.env.TWILIO_ACCOUNT_SID ? 'Set' : 'Missing',
+      twilioAuthToken: process.env.TWILIO_AUTH_TOKEN ? 'Set' : 'Missing',
+      whatsappNumber: FROM_WHATSAPP,
+    });
+
+    // Log specific error types for easier debugging
+    if (errorCode === 21211) {
+      console.error('Invalid phone number format. Ensure number includes country code (e.g., +521234567890)');
+    } else if (errorCode === 21608) {
+      console.error('WhatsApp number not verified. Verify your WhatsApp number in Twilio Console.');
+    } else if (errorCode === 20003) {
+      console.error('Invalid Twilio credentials. Check TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.');
+    }
+
     return false;
   }
 }

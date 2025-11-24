@@ -20,7 +20,12 @@ export async function GET(req: NextRequest) {
     // Generate state token for security (includes userId for verification)
     const state = Buffer.from(`${session.user.id}:${Date.now()}`).toString("base64");
 
-    const redirectUri = GITHUB_REDIRECT_URI;
+    // Construct redirect URI from request URL to ensure it matches the current domain
+    const baseUrl = new URL(req.url).origin;
+    const redirectUri = process.env.GITHUB_REDIRECT_URI || `${baseUrl}/api/github/oauth/callback`;
+    
+    // Log for debugging (remove in production if needed)
+    console.log("GitHub OAuth - Using redirect_uri:", redirectUri);
 
     const params = new URLSearchParams({
       client_id: GITHUB_CLIENT_ID,

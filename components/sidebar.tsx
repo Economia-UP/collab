@@ -24,6 +24,7 @@ import { SidebarStats } from "@/components/sidebar-stats";
 const navigation = [
   { name: "Inicio", href: "/", icon: Home },
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Búsqueda", href: "/search", icon: Search },
   { name: "Proyectos", href: "/projects", icon: FolderKanban },
   { name: "Mis Proyectos", href: "/my-projects", icon: FolderOpen },
   { name: "Configuración", href: "/settings", icon: Settings },
@@ -47,7 +48,7 @@ export function Sidebar() {
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/" className="flex items-center gap-2">
           <h2 className="text-lg font-semibold bg-gradient-to-r from-dorado to-azul bg-clip-text text-transparent">
-            Research Hub UP
+            Collaboration Hub
           </h2>
         </Link>
       </div>

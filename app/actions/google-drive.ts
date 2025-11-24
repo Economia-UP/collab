@@ -8,7 +8,9 @@ import {
   shareGoogleDriveFolder,
   revokeGoogleDriveAccess,
   listGoogleDriveFiles,
+  listGoogleDriveFolders,
   refreshGoogleDriveToken,
+  getGoogleDriveClient,
 } from "@/lib/google-drive";
 
 export async function createProjectGoogleDriveFolder(projectId: string) {
@@ -297,6 +299,144 @@ export async function getGoogleDriveFiles(projectId: string) {
     accessToken,
     user.googleDriveRefreshToken || undefined,
     project.googleDriveFolderId
+  );
+}
+
+/**
+ * Connect an existing Google Drive folder to a project
+ */
+export async function connectExistingGoogleDriveFolder(
+  projectId: string,
+  folderId: string
+) {
+  const session = await requireAuth();
+  const userId = session.user.id;
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: {
+      ownerId: true,
+      title: true,
+      googleDriveFolderId: true,
+    },
+  });
+
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  if (project.ownerId !== userId && !isAdmin(session.user.role)) {
+    throw new Error("Unauthorized");
+  }
+
+  if (project.googleDriveFolderId) {
+    throw new Error("El proyecto ya tiene una carpeta de Google Drive conectada");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      googleDriveAccessToken: true,
+      googleDriveRefreshToken: true,
+    },
+  });
+
+  if (!user?.googleDriveAccessToken) {
+    throw new Error("Google Drive no conectado. Por favor conecta tu cuenta de Google Drive primero.");
+  }
+
+  let accessToken = user.googleDriveAccessToken;
+  
+  // Refresh token if needed
+  if (user.googleDriveRefreshToken) {
+    try {
+      accessToken = await refreshGoogleDriveToken(user.googleDriveRefreshToken);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { googleDriveAccessToken: accessToken },
+      });
+    } catch (error) {
+      console.error("Failed to refresh token, using existing:", error);
+    }
+  }
+
+  // Verify the folder exists and get its details
+  const drive = getGoogleDriveClient(accessToken, user.googleDriveRefreshToken || undefined);
+  const folderResponse = await drive.files.get({
+    fileId: folderId,
+    fields: "id, name, webViewLink, mimeType",
+  });
+
+  if (folderResponse.data.mimeType !== "application/vnd.google-apps.folder") {
+    throw new Error("El ID proporcionado no corresponde a una carpeta de Google Drive");
+  }
+
+  const folderUrl = folderResponse.data.webViewLink || `https://drive.google.com/drive/folders/${folderId}`;
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: {
+      googleDriveFolderId: folderId,
+      googleDriveFolderUrl: folderUrl,
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      projectId,
+      actorId: userId,
+      type: "PROJECT_UPDATED",
+      message: `Carpeta de Google Drive "${folderResponse.data.name}" conectada al proyecto`,
+    },
+  });
+
+  revalidatePath(`/projects/${projectId}`);
+
+  return {
+    id: folderId,
+    name: folderResponse.data.name || "Carpeta",
+    url: folderUrl,
+  };
+}
+
+/**
+ * List available Google Drive folders for the current user
+ */
+export async function listAvailableGoogleDriveFolders(pageToken?: string) {
+  const session = await requireAuth();
+  const userId = session.user.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      googleDriveAccessToken: true,
+      googleDriveRefreshToken: true,
+    },
+  });
+
+  if (!user?.googleDriveAccessToken) {
+    throw new Error("Google Drive no conectado. Por favor conecta tu cuenta de Google Drive primero.");
+  }
+
+  let accessToken = user.googleDriveAccessToken;
+  
+  // Refresh token if needed
+  if (user.googleDriveRefreshToken) {
+    try {
+      accessToken = await refreshGoogleDriveToken(user.googleDriveRefreshToken);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { googleDriveAccessToken: accessToken },
+      });
+    } catch (error) {
+      console.error("Failed to refresh token, using existing:", error);
+    }
+  }
+
+  return await listGoogleDriveFolders(
+    accessToken,
+    user.googleDriveRefreshToken || undefined,
+    pageToken
   );
 }
 

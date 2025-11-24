@@ -18,7 +18,16 @@ export async function updateNotificationPreferences(data: {
 
   // Normalize phone number: remove spaces, dashes, parentheses, etc.
   let normalizedPhoneNumber: string | null = null;
-  if (data.phoneNumber && data.phoneNumber.trim() !== "") {
+  
+  // Only validate phone number if WhatsApp is enabled
+  if (data.whatsappNotifications) {
+    if (!data.phoneNumber || data.phoneNumber.trim() === "") {
+      throw new Error(
+        "Se requiere un número de teléfono para recibir notificaciones por WhatsApp. " +
+        "Por favor, ingresa tu número con el código de país (ejemplo: +521234567890)."
+      );
+    }
+
     // Remove all non-digit characters except +
     normalizedPhoneNumber = data.phoneNumber.trim().replace(/[^\d+]/g, "");
     
@@ -34,6 +43,7 @@ export async function updateNotificationPreferences(data: {
     
     // Validate phone number format (E.164 format: + followed by 1-15 digits)
     // More flexible: allows + followed by country code and number
+    // Minimum 7 digits (country code + number), maximum 15 digits total
     const phoneRegex = /^\+[1-9]\d{6,14}$/;
     if (!phoneRegex.test(normalizedPhoneNumber)) {
       throw new Error(
@@ -42,14 +52,21 @@ export async function updateNotificationPreferences(data: {
         "El número debe tener entre 7 y 15 dígitos después del código de país."
       );
     }
-  }
-
-  // If WhatsApp is enabled but no phone number is provided, throw error
-  if (data.whatsappNotifications && !normalizedPhoneNumber) {
-    throw new Error(
-      "Se requiere un número de teléfono para recibir notificaciones por WhatsApp. " +
-      "Por favor, ingresa tu número con el código de país (ejemplo: +521234567890)."
-    );
+  } else if (data.phoneNumber && data.phoneNumber.trim() !== "") {
+    // If WhatsApp is disabled but phone number is provided, normalize it anyway
+    normalizedPhoneNumber = data.phoneNumber.trim().replace(/[^\d+]/g, "");
+    if (!normalizedPhoneNumber.startsWith("+")) {
+      normalizedPhoneNumber = normalizedPhoneNumber.replace(/^0+/, "");
+      if (normalizedPhoneNumber && !normalizedPhoneNumber.startsWith("+")) {
+        normalizedPhoneNumber = "+" + normalizedPhoneNumber;
+      }
+    }
+    // Only validate if it looks valid, otherwise just store as-is
+    const phoneRegex = /^\+[1-9]\d{6,14}$/;
+    if (!phoneRegex.test(normalizedPhoneNumber)) {
+      // If invalid format, set to null
+      normalizedPhoneNumber = null;
+    }
   }
 
   const updated = await prisma.user.update({

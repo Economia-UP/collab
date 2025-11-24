@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 
 const profileSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
+  image: z.string().url("Debe ser una URL válida").optional().or(z.literal("")),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -51,6 +52,7 @@ export function SettingsForm({ user, integrationsConfig = { github: true, google
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: user.name || "",
+      image: user.image || "",
     },
   });
 
@@ -94,11 +96,16 @@ export function SettingsForm({ user, integrationsConfig = { github: true, google
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      await updateProfile(data);
+      await updateProfile({
+        name: data.name,
+        image: data.image || undefined,
+      });
       toast({
         title: "Perfil actualizado",
         description: "Tu perfil se ha actualizado correctamente.",
       });
+      // Refresh the page to show updated image
+      window.location.reload();
     } catch (error) {
       toast({
         title: "Error",
@@ -145,6 +152,22 @@ export function SettingsForm({ user, integrationsConfig = { github: true, google
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name.message}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="image">URL de foto de perfil</Label>
+              <Input 
+                id="image" 
+                type="url"
+                placeholder="https://ejemplo.com/foto.jpg"
+                {...register("image")} 
+              />
+              {errors.image && (
+                <p className="text-sm text-destructive">{errors.image.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Ingresa la URL de tu foto de perfil. También puedes actualizar tu foto desde tu cuenta de Clerk.
+              </p>
             </div>
 
             <div className="space-y-2">

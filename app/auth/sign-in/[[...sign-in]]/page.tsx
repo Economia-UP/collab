@@ -5,7 +5,7 @@ export default function SignInPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10 p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold">Research Hub UP</h1>
+          <h1 className="text-2xl font-bold">Collaboration Hub</h1>
           <p className="text-sm text-muted-foreground mt-2">
             Inicia sesión con tu correo institucional @up.edu.mx
           </p>

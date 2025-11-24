@@ -14,6 +14,7 @@ import { ProjectDiscussion } from "./project-discussion";
 import { ProjectTasks } from "./project-tasks";
 import { ProjectActivity } from "./project-activity";
 import { ProjectFiles } from "./project-files";
+import { AIAssistant } from "./ai-assistant";
 import { Project, ProjectMember, ProjectStatus, Visibility } from "@prisma/client";
 
 interface ProjectDetailTabsProps {
@@ -43,6 +44,8 @@ interface ProjectDetailTabsProps {
   isMember: boolean;
   isAdmin: boolean;
   currentUserId?: string;
+  userHasGoogleDrive?: boolean;
+  userHasDropbox?: boolean;
 }
 
 export function ProjectDetailTabs({
@@ -51,14 +54,19 @@ export function ProjectDetailTabs({
   isMember,
   isAdmin,
   currentUserId,
+  userHasGoogleDrive = false,
+  userHasDropbox = false,
 }: ProjectDetailTabsProps) {
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 gap-1">
         <TabsTrigger value="overview">Resumen</TabsTrigger>
         <TabsTrigger value="discussion">Discusión</TabsTrigger>
         <TabsTrigger value="tasks">Tareas</TabsTrigger>
         <TabsTrigger value="files">Archivos</TabsTrigger>
+        <TabsTrigger value="assistant">Asistente IA</TabsTrigger>
+        <TabsTrigger value="calendar">Calendario</TabsTrigger>
+        <TabsTrigger value="meetings">Reuniones</TabsTrigger>
         <TabsTrigger value="activity">Actividad</TabsTrigger>
       </TabsList>
 
@@ -96,7 +104,54 @@ export function ProjectDetailTabs({
           project={project}
           isOwner={isOwner}
           isMember={isMember || isAdmin}
+          userHasGoogleDrive={userHasGoogleDrive}
+          userHasDropbox={userHasDropbox}
         />
+      </TabsContent>
+
+      <TabsContent value="assistant" className="space-y-4">
+        {(isOwner || isMember || isAdmin) && (
+          <AIAssistant projectId={project.id} projectTitle={project.title} />
+        )}
+        {!isOwner && !isMember && !isAdmin && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">
+                Debes ser miembro del proyecto para usar el asistente de IA.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+
+      <TabsContent value="calendar" className="space-y-4">
+        {(isOwner || isMember || isAdmin) && (
+          <CalendarView projectId={project.id} />
+        )}
+        {!isOwner && !isMember && !isAdmin && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">
+                Debes ser miembro del proyecto para ver el calendario.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+
+      <TabsContent value="meetings" className="space-y-4">
+        {(isOwner || isMember || isAdmin) && (
+          <MeetingScheduler projectId={project.id} />
+        )}
+        {!isOwner && !isMember && !isAdmin && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">
+                Debes ser miembro del proyecto para ver las reuniones.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </TabsContent>
 
       <TabsContent value="activity" className="space-y-4">

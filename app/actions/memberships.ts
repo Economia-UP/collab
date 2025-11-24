@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { MembershipStatus, ProjectRole } from "@prisma/client";
 import { shareGoogleDriveFolderWithMember, revokeGoogleDriveAccessFromMember } from "@/app/actions/google-drive";
 import { shareDropboxFolderWithMember, revokeDropboxAccessFromMember } from "@/app/actions/dropbox";
+import { triggerMemberAddedWorkflow } from "@/app/actions/workflows";
 import { sendNotification, NotificationTemplates } from "@/lib/notifications";
 
 export async function requestMembership(projectId: string, message?: string) {
@@ -184,6 +185,11 @@ export async function approveMembership(projectId: string, userId: string) {
         // Don't fail the membership approval if Dropbox sharing fails
       }
     }
+
+    // Trigger n8n workflow for member added
+    await triggerMemberAddedWorkflow(projectId, userId, memberUser.email).catch((error) => {
+      console.error("Failed to trigger n8n workflow:", error);
+    });
   }
 
   revalidatePath(`/projects/${projectId}`);
@@ -448,6 +454,11 @@ export async function inviteMembers(
             console.error("Failed to share Dropbox folder:", error);
           }
         }
+
+        // Trigger n8n workflow for member added
+        await triggerMemberAddedWorkflow(projectId, user.id, user.email).catch((error) => {
+          console.error("Failed to trigger n8n workflow:", error);
+        });
       } else if (existing.status !== "ACTIVE") {
         // Reactivate if previously left or rejected
         await prisma.projectMember.update({

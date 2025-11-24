@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendNotification, NotificationTemplates } from "@/lib/notifications";
+import { triggerCommentAddedWorkflow } from "@/app/actions/workflows";
 
 export async function addComment(projectId: string, content: string) {
   const session = await requireAuth();
@@ -107,6 +108,16 @@ export async function addComment(projectId: string, content: string) {
       )
     );
   }
+
+  // Trigger n8n workflow for comment added
+  await triggerCommentAddedWorkflow(
+    projectId,
+    comment.id,
+    comment.author.email,
+    content.substring(0, 100)
+  ).catch((error) => {
+    console.error("Failed to trigger n8n workflow for comment:", error);
+  });
 
   revalidatePath(`/projects/${projectId}`);
 

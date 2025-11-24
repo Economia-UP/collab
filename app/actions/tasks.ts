@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { TaskStatus, TaskPriority, TaskType } from "@prisma/client";
 import { sendNotification, NotificationTemplates } from "@/lib/notifications";
+import { triggerTaskCreatedWorkflow } from "@/app/actions/workflows";
 
 export async function getProjectTasks(projectId: string) {
   const session = await requireAuth();
@@ -137,6 +138,21 @@ export async function createTask(
       });
     }
   }
+
+  // Trigger n8n workflow for task created
+  const assignee = data.assigneeId ? await prisma.user.findUnique({
+    where: { id: data.assigneeId },
+    select: { email: true },
+  }) : null;
+
+  await triggerTaskCreatedWorkflow(
+    projectId,
+    task.id,
+    task.title,
+    assignee?.email
+  ).catch((error) => {
+    console.error("Failed to trigger n8n workflow for task:", error);
+  });
 
   revalidatePath(`/projects/${projectId}`);
 
