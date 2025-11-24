@@ -46,15 +46,15 @@ export function ProjectsFilter() {
   const searchParams = useSearchParams();
 
   const currentSearch = searchParams.get("search") || "";
-  const currentTopic = searchParams.get("topic") || "";
-  const currentCategory = searchParams.get("category") || "";
+  const currentTopic = searchParams.get("topic") || "all";
+  const currentCategory = searchParams.get("category") || "all";
   const currentStatuses = searchParams.getAll("status") as ProjectStatus[];
   const hasGithub = searchParams.get("hasGithub") === "true";
   const hasOverleaf = searchParams.get("hasOverleaf") === "true";
 
   const updateSearchParams = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
+    if (value && value !== "all") {
       params.set(key, value);
     } else {
       params.delete(key);
@@ -115,7 +115,7 @@ export function ProjectsFilter() {
                 <SelectValue placeholder="Tema" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los temas</SelectItem>
+                <SelectItem value="all">Todos los temas</SelectItem>
                 {topics.map((topic) => (
                   <SelectItem key={topic} value={topic}>
                     {topic}
@@ -132,7 +132,7 @@ export function ProjectsFilter() {
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las categorías</SelectItem>
+                <SelectItem value="all">Todas las categorías</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}

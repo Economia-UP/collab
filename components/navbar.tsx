@@ -71,14 +71,17 @@ export function Navbar({ session }: NavbarProps) {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <button
+                    type="button"
+                    className="relative h-10 w-10 rounded-full inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-dorado/10 hover:text-dorado"
+                  >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={session.user?.image || undefined} alt={session.user?.name || ""} />
                       <AvatarFallback>
                         {session.user?.name?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">

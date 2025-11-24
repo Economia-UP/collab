@@ -12,13 +12,16 @@ export const dynamic = 'force-dynamic';
 export default async function ProjectDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }) {
+  // Handle params as Promise (Next.js 16)
+  const resolvedParams = params instanceof Promise ? await params : params;
+  
   const session = await getServerSession();
   const authSession = await getSession();
   
   try {
-    const project = await getProjectById(params.id);
+    const project = await getProjectById(resolvedParams.id);
     const isOwner = session?.user?.id === project.ownerId;
     const isMember = project.members.some(
       (m) => m.userId === session?.user?.id && m.status === "ACTIVE"
@@ -35,7 +38,7 @@ export default async function ProjectDetailPage({
             </div>
             {isOwner && (
               <Button asChild>
-                <Link href={`/projects/${params.id}/edit`}>Editar</Link>
+                <Link href={`/projects/${resolvedParams.id}/edit`}>Editar</Link>
               </Button>
             )}
           </div>

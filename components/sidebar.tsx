@@ -25,7 +25,9 @@ export function Sidebar() {
 
   return (
     <motion.div 
-      {...fadeIn}
+      initial="visible"
+      animate="visible"
+      variants={fadeIn}
       className="flex h-full w-64 flex-col border-r bg-background"
     >
       <div className="flex h-16 items-center border-b px-6">
@@ -34,7 +36,9 @@ export function Sidebar() {
         </h2>
       </div>
       <motion.nav 
-        {...staggerContainer}
+        initial="visible"
+        animate="visible"
+        variants={staggerContainer}
         className="flex-1 space-y-1 p-4"
       >
         {navigation.map((item) => {

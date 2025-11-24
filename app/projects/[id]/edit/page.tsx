@@ -11,8 +11,11 @@ export const dynamic = 'force-dynamic';
 export default async function EditProjectPage({
   params,
 }: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }) {
+  // Handle params as Promise (Next.js 16)
+  const resolvedParams = params instanceof Promise ? await params : params;
+  
   const session = await getServerSession();
   if (!session) {
     redirect("/auth/sign-in");
@@ -21,11 +24,11 @@ export default async function EditProjectPage({
   const authSession = await getSession();
 
   try {
-    const project = await getProjectById(params.id);
+    const project = await getProjectById(resolvedParams.id);
     
     // Check if user is owner or admin
     if (project.ownerId !== session.user.id && !isAdmin(session.user.role)) {
-      redirect(`/projects/${params.id}`);
+      redirect(`/projects/${resolvedParams.id}`);
     }
 
     return (
@@ -39,7 +42,7 @@ export default async function EditProjectPage({
           </div>
 
           <ProjectForm
-            projectId={params.id}
+            projectId={resolvedParams.id}
             initialData={{
               title: project.title,
               shortSummary: project.shortSummary,
