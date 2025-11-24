@@ -36,6 +36,7 @@ model Project {
   status              ProjectStatus   @default(DRAFT)
   visibility          Visibility      @default(PRIVATE)
   programmingLangs    String[]
+  libraries           String[]
   requiredSkills      String[]
   institution         String          @default("Universidad Panamericana")
   ownerId             String

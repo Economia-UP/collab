@@ -12,6 +12,7 @@ export async function createProject(data: {
   topic: string;
   category: string;
   programmingLangs: string[];
+  libraries?: string[];
   requiredSkills: string[];
   visibility: Visibility;
   status?: ProjectStatus;
@@ -31,6 +32,7 @@ export async function createProject(data: {
       topic: data.topic,
       category: data.category,
       programmingLangs: data.programmingLangs,
+      libraries: data.libraries || [],
       requiredSkills: data.requiredSkills,
       visibility: data.visibility,
       status: data.status || "PLANNING",

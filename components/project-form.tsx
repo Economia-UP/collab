@@ -28,6 +28,7 @@ const projectSchema = z.object({
   topic: z.string().min(1, "El tema es requerido"),
   category: z.string().min(1, "La categoría es requerida"),
   programmingLangs: z.array(z.string()).default([]),
+  libraries: z.array(z.string()).default([]),
   requiredSkills: z.array(z.string()).default([]),
   visibility: z.nativeEnum(Visibility),
   status: z.nativeEnum(ProjectStatus).optional(),
@@ -52,12 +53,51 @@ const categories = ["Tesis", "Paper", "Grant", "Proyecto", "Otro"];
 
 const commonLanguages = ["R", "Python", "Stata", "Eviews", "MATLAB", "Julia", "JavaScript", "Java", "C++", "SQL"];
 
+// Librerías comunes por lenguaje
+const commonLibraries: Record<string, string[]> = {
+  Python: [
+    "pandas", "numpy", "scipy", "scikit-learn", "matplotlib", "seaborn",
+    "tensorflow", "pytorch", "keras", "statsmodels", "h2o", "xgboost",
+    "lightgbm", "plotly", "dash", "flask", "django", "fastapi"
+  ],
+  R: [
+    "dplyr", "tidyr", "ggplot2", "data.table", "lubridate", "stringr",
+    "caret", "randomForest", "glmnet", "shiny", "rmarkdown", "knitr",
+    "plm", "fixest", "stargazer", "xtable", "haven", "readr"
+  ],
+  Stata: [
+    "estout", "outreg2", "reghdfe", "ivreg2", "xtreg", "xtabond"
+  ],
+  Eviews: [],
+  MATLAB: [
+    "Statistics and Machine Learning Toolbox", "Econometrics Toolbox",
+    "Financial Toolbox", "Optimization Toolbox"
+  ],
+  Julia: [
+    "DataFrames", "Plots", "StatsBase", "Distributions", "GLM"
+  ],
+  JavaScript: [
+    "React", "Vue", "Angular", "Node.js", "Express", "D3.js"
+  ],
+  Java: [
+    "Spring", "Hibernate", "Apache Commons", "JUnit"
+  ],
+  "C++": [
+    "Boost", "Eigen", "Qt", "OpenCV"
+  ],
+  SQL: [
+    "PostgreSQL", "MySQL", "SQLite", "MongoDB"
+  ]
+};
+
 export function ProjectForm({ projectId, initialData }: { projectId?: string; initialData?: Partial<ProjectFormData> }) {
   const router = useRouter();
   const { toast } = useToast();
   const [programmingLangs, setProgrammingLangs] = useState<string[]>(initialData?.programmingLangs || []);
+  const [libraries, setLibraries] = useState<string[]>(initialData?.libraries || []);
   const [requiredSkills, setRequiredSkills] = useState<string[]>(initialData?.requiredSkills || []);
   const [skillInput, setSkillInput] = useState("");
+  const [libraryInput, setLibraryInput] = useState("");
   const [inviteEmails, setInviteEmails] = useState<string[]>([]);
   const [coOwnerEmails, setCoOwnerEmails] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState("");
@@ -82,6 +122,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
       githubRepoUrl: initialData?.githubRepoUrl || "",
       overleafProjectUrl: initialData?.overleafProjectUrl || "",
       programmingLangs: initialData?.programmingLangs || [],
+      libraries: initialData?.libraries || [],
       requiredSkills: initialData?.requiredSkills || [],
     },
   });
@@ -95,6 +136,48 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
       : [...programmingLangs, lang];
     setProgrammingLangs(newLangs);
     setValue("programmingLangs", newLangs);
+    
+    // Si se deselecciona un lenguaje, remover sus librerías
+    if (!newLangs.includes(lang)) {
+      const langLibraries = commonLibraries[lang] || [];
+      const newLibraries = libraries.filter(lib => !langLibraries.includes(lib));
+      setLibraries(newLibraries);
+      setValue("libraries", newLibraries);
+    }
+  };
+
+  const toggleLibrary = (library: string) => {
+    const newLibraries = libraries.includes(library)
+      ? libraries.filter((l) => l !== library)
+      : [...libraries, library];
+    setLibraries(newLibraries);
+    setValue("libraries", newLibraries);
+  };
+
+  const addCustomLibrary = () => {
+    if (libraryInput.trim() && !libraries.includes(libraryInput.trim())) {
+      const newLibraries = [...libraries, libraryInput.trim()];
+      setLibraries(newLibraries);
+      setValue("libraries", newLibraries);
+      setLibraryInput("");
+    }
+  };
+
+  const removeLibrary = (library: string) => {
+    const newLibraries = libraries.filter((l) => l !== library);
+    setLibraries(newLibraries);
+    setValue("libraries", newLibraries);
+  };
+
+  // Obtener librerías disponibles basadas en los lenguajes seleccionados
+  const getAvailableLibraries = () => {
+    const available: string[] = [];
+    programmingLangs.forEach(lang => {
+      const langLibs = commonLibraries[lang] || [];
+      available.push(...langLibs);
+    });
+    // Remover duplicados
+    return [...new Set(available)];
   };
 
   const addSkill = () => {
@@ -154,6 +237,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           topic: data.topic,
           category: data.category,
           programmingLangs,
+          libraries: libraries,
           requiredSkills,
           visibility: data.visibility,
           status: data.status,
@@ -167,6 +251,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
         await createProject({
           ...data,
           programmingLangs,
+          libraries: libraries,
           requiredSkills,
           status: data.status || "PLANNING",
           githubRepoUrl: data.githubRepoUrl || undefined,
@@ -347,6 +432,85 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           </div>
         </CardContent>
       </Card>
+
+      {programmingLangs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Librerías y Paquetes (Opcional)</CardTitle>
+            <CardDescription>
+              Selecciona librerías comunes o agrega librerías personalizadas
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {getAvailableLibraries().length > 0 && (
+              <div>
+                <Label className="text-sm font-medium mb-2 block">
+                  Librerías Comunes
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {getAvailableLibraries().map((library) => (
+                    <Button
+                      key={library}
+                      type="button"
+                      variant={libraries.includes(library) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleLibrary(library)}
+                    >
+                      {library}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="customLibrary">Agregar Librería Personalizada</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="customLibrary"
+                  value={libraryInput}
+                  onChange={(e) => setLibraryInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomLibrary();
+                    }
+                  }}
+                  placeholder="Ej: mi-libreria-custom, otro-paquete..."
+                />
+                <Button type="button" onClick={addCustomLibrary}>
+                  Agregar
+                </Button>
+              </div>
+            </div>
+
+            {libraries.length > 0 && (
+              <div>
+                <Label className="text-sm font-medium mb-2 block">
+                  Librerías Seleccionadas
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {libraries.map((library) => (
+                    <div
+                      key={library}
+                      className="flex items-center gap-1 rounded-full border bg-background px-3 py-1 text-sm"
+                    >
+                      {library}
+                      <button
+                        type="button"
+                        onClick={() => removeLibrary(library)}
+                        className="ml-1 text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
