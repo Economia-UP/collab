@@ -101,3 +101,5 @@ Los siguientes eventos de GitHub se sincronizan automáticamente con ActivityLog
 - [ ] Mostrar commits recientes en la vista del proyecto
 - [ ] Notificaciones cuando se crean issues o PRs
 
+
+

@@ -134,3 +134,5 @@ DROPBOX_REDIRECT_URI=https://tu-dominio.vercel.app/api/dropbox/oauth/callback
 - [GitHub Integration Setup](./GITHUB_INTEGRATION_SETUP.md) - Guía detallada de GitHub
 - [Integrations Plan](./INTEGRATIONS_PLAN.md) - Plan completo de integraciones
 
+
+
