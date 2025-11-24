@@ -215,34 +215,158 @@ export async function getProjects(filters?: {
     where.overleafProjectUrl = { not: null };
   }
 
-  const projects = await prisma.project.findMany({
-    where,
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-          role: true,
+  // Check if DATABASE_URL is available
+  if (!process.env.DATABASE_URL) {
+    // Return dummy data when DATABASE_URL is not available
+    const dummyProjects = [
+      {
+        id: "1",
+        title: "Análisis de Datos Económicos con R",
+        shortSummary: "Investigación sobre tendencias económicas usando modelos estadísticos avanzados",
+        topic: filters?.topic || "Economía",
+        category: filters?.category || "Tesis",
+        status: "ANALYSIS" as ProjectStatus,
+        visibility: "PUBLIC" as Visibility,
+        programmingLangs: ["R", "Python"],
+        requiredSkills: ["Estadística", "Econometría"],
+        githubRepoUrl: "https://github.com/example/project1",
+        overleafProjectUrl: null,
+        ownerId: "dummy-user-1",
+        owner: {
+          id: "dummy-user-1",
+          name: "Dr. Juan Pérez",
+          email: "juan.perez@up.edu.mx",
+          image: null,
+          role: "PROFESSOR" as const,
         },
-      },
-      _count: {
-        select: {
-          members: {
-            where: { status: "ACTIVE" },
-          },
-          comments: true,
-          tasks: true,
+        _count: {
+          members: 3,
+          comments: 5,
+          tasks: 8,
         },
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+      {
+        id: "2",
+        title: "Machine Learning en Medicina",
+        shortSummary: "Aplicación de algoritmos de ML para diagnóstico temprano",
+        topic: filters?.topic || "Medicina",
+        category: filters?.category || "Paper",
+        status: "DATA_COLLECTION" as ProjectStatus,
+        visibility: "PUBLIC" as Visibility,
+        programmingLangs: ["Python"],
+        requiredSkills: ["Machine Learning", "Python", "TensorFlow"],
+        githubRepoUrl: "https://github.com/example/project2",
+        overleafProjectUrl: "https://www.overleaf.com/project/123",
+        ownerId: "dummy-user-2",
+        owner: {
+          id: "dummy-user-2",
+          name: "Dra. María González",
+          email: "maria.gonzalez@up.edu.mx",
+          image: null,
+          role: "PROFESSOR" as const,
+        },
+        _count: {
+          members: 5,
+          comments: 12,
+          tasks: 15,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "3",
+        title: "Estudio de Mercado Financiero",
+        shortSummary: "Análisis de volatilidad en mercados emergentes",
+        topic: filters?.topic || "Finanzas",
+        category: filters?.category || "Grant",
+        status: "WRITING" as ProjectStatus,
+        visibility: "PUBLIC" as Visibility,
+        programmingLangs: ["Stata", "R"],
+        requiredSkills: ["Finanzas", "Análisis de datos"],
+        githubRepoUrl: null,
+        overleafProjectUrl: null,
+        ownerId: "dummy-user-3",
+        owner: {
+          id: "dummy-user-3",
+          name: "Dr. Carlos Rodríguez",
+          email: "carlos.rodriguez@up.edu.mx",
+          image: null,
+          role: "PROFESSOR" as const,
+        },
+        _count: {
+          members: 2,
+          comments: 3,
+          tasks: 6,
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
 
-  return projects;
+    // Apply filters to dummy data
+    let filtered = dummyProjects;
+    if (filters?.topic) {
+      filtered = filtered.filter(p => p.topic === filters.topic);
+    }
+    if (filters?.category) {
+      filtered = filtered.filter(p => p.category === filters.category);
+    }
+    if (filters?.status && filters.status.length > 0) {
+      filtered = filtered.filter(p => filters.status!.includes(p.status));
+    }
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.title.toLowerCase().includes(searchLower) ||
+        p.shortSummary.toLowerCase().includes(searchLower)
+      );
+    }
+    if (filters?.hasGithub) {
+      filtered = filtered.filter(p => p.githubRepoUrl !== null);
+    }
+    if (filters?.hasOverleaf) {
+      filtered = filtered.filter(p => p.overleafProjectUrl !== null);
+    }
+
+    return filtered as any;
+  }
+
+  try {
+    const projects = await prisma.project.findMany({
+      where,
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: true,
+          },
+        },
+        _count: {
+          select: {
+            members: {
+              where: { status: "ACTIVE" },
+            },
+            comments: true,
+            tasks: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    return projects;
+  } catch (error) {
+    console.error("Error fetching projects from database:", error);
+    // Return empty array if database query fails
+    return [];
+  }
 }
 
 export async function getProjectById(projectId: string) {

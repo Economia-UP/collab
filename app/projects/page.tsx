@@ -62,7 +62,7 @@ export default async function ProjectsPage({
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
+            {projects.map((project: Awaited<ReturnType<typeof getProjects>>[0]) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>

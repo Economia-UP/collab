@@ -48,6 +48,22 @@ export function Navbar({ session }: NavbarProps) {
               Research Hub UP
             </span>
           </Link>
+          {session && (
+            <nav className="hidden md:flex items-center gap-4">
+              <Link 
+                href="/projects" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Proyectos
+              </Link>
+              <Link 
+                href="/dashboard" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Dashboard
+              </Link>
+            </nav>
+          )}
         </motion.div>
 
         <div className="flex items-center gap-4">
@@ -79,6 +95,12 @@ export function Navbar({ session }: NavbarProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/projects">Proyectos</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-projects">Mis Proyectos</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/settings">Configuración</Link>
