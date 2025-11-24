@@ -134,6 +134,7 @@ export async function updateProject(
     topic?: string;
     category?: string;
     programmingLangs?: string[];
+    libraries?: string[];
     requiredSkills?: string[];
     visibility?: Visibility;
     status?: ProjectStatus;

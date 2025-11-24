@@ -198,7 +198,7 @@ export function ProjectOverview({
       </div>
 
       {/* Skills & Languages */}
-      {(project.programmingLangs.length > 0 || project.requiredSkills.length > 0) && (
+      {(project.programmingLangs.length > 0 || (project as any).libraries?.length > 0 || project.requiredSkills.length > 0) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Tecnologías y Habilidades</CardTitle>
@@ -211,6 +211,18 @@ export function ProjectOverview({
                   {project.programmingLangs.map((lang) => (
                     <Badge key={lang} variant="outline">
                       {lang}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(project as any).libraries && (project as any).libraries.length > 0 && (
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Librerías y Paquetes:</span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(project as any).libraries.map((library: string) => (
+                    <Badge key={library} variant="default" className="bg-azul/10 text-azul border-azul/20">
+                      {library}
                     </Badge>
                   ))}
                 </div>
