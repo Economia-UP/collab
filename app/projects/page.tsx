@@ -10,21 +10,24 @@ export const dynamic = 'force-dynamic';
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: { [key: string]: string | string[] | undefined } | Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  // Handle searchParams as Promise (Next.js 16)
+  const params = searchParams instanceof Promise ? await searchParams : searchParams;
+  
   const filters = {
-    topic: searchParams.topic as string | undefined,
-    category: searchParams.category as string | undefined,
-    status: searchParams.status
-      ? (Array.isArray(searchParams.status)
-          ? searchParams.status
-          : [searchParams.status]
+    topic: params?.topic as string | undefined,
+    category: params?.category as string | undefined,
+    status: params?.status
+      ? (Array.isArray(params.status)
+          ? params.status
+          : [params.status]
         ).filter((s): s is ProjectStatus => s in ProjectStatus)
       : undefined,
-    visibility: searchParams.visibility as Visibility | undefined,
-    search: searchParams.search as string | undefined,
-    hasGithub: searchParams.hasGithub === "true",
-    hasOverleaf: searchParams.hasOverleaf === "true",
+    visibility: params?.visibility as Visibility | undefined,
+    search: params?.search as string | undefined,
+    hasGithub: params?.hasGithub === "true",
+    hasOverleaf: params?.hasOverleaf === "true",
   };
 
   let session = null;
