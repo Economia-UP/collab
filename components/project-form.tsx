@@ -18,7 +18,7 @@ import { createProject } from "@/app/actions/projects";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Visibility } from "@prisma/client";
+import { Visibility, ProjectStatus } from "@prisma/client";
 import { updateProject } from "@/app/actions/projects";
 
 const projectSchema = z.object({
@@ -30,6 +30,7 @@ const projectSchema = z.object({
   programmingLangs: z.array(z.string()).default([]),
   requiredSkills: z.array(z.string()).default([]),
   visibility: z.nativeEnum(Visibility),
+  status: z.nativeEnum(ProjectStatus).optional(),
   githubRepoUrl: z.string().url().optional().or(z.literal("")),
   overleafProjectUrl: z.string().url().optional().or(z.literal("")),
 });
@@ -77,6 +78,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
       topic: initialData?.topic || "",
       category: initialData?.category || "",
       visibility: initialData?.visibility || "PRIVATE",
+      status: initialData?.status || "PLANNING",
       githubRepoUrl: initialData?.githubRepoUrl || "",
       overleafProjectUrl: initialData?.overleafProjectUrl || "",
       programmingLangs: initialData?.programmingLangs || [],
@@ -85,6 +87,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
   });
 
   const visibility = watch("visibility");
+  const status = watch("status");
 
   const toggleLanguage = (lang: string) => {
     const newLangs = programmingLangs.includes(lang)
@@ -153,6 +156,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           programmingLangs,
           requiredSkills,
           visibility: data.visibility,
+          status: data.status,
         });
         toast({
           title: "Proyecto actualizado",
@@ -164,6 +168,7 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
           ...data,
           programmingLangs,
           requiredSkills,
+          status: data.status || "PLANNING",
           githubRepoUrl: data.githubRepoUrl || undefined,
           overleafProjectUrl: data.overleafProjectUrl || undefined,
           inviteEmails: inviteEmails.length > 0 ? inviteEmails : undefined,
@@ -276,20 +281,47 @@ export function ProjectForm({ projectId, initialData }: { projectId?: string; in
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="visibility">Visibilidad *</Label>
-            <Select
-              value={visibility}
-              onValueChange={(value) => setValue("visibility", value as Visibility)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PUBLIC">Público</SelectItem>
-                <SelectItem value="PRIVATE">Privado</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="visibility">Visibilidad *</Label>
+              <Select
+                value={visibility}
+                onValueChange={(value) => setValue("visibility", value as Visibility)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PUBLIC">Público</SelectItem>
+                  <SelectItem value="PRIVATE">Privado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {!projectId && (
+              <div className="space-y-2">
+                <Label htmlFor="status">Estado Inicial *</Label>
+                <Select
+                  value={status}
+                  onValueChange={(value) => setValue("status", value as ProjectStatus)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PLANNING">Planificación</SelectItem>
+                    <SelectItem value="DATA_COLLECTION">Recolección de Datos</SelectItem>
+                    <SelectItem value="ANALYSIS">Análisis</SelectItem>
+                    <SelectItem value="WRITING">Escritura</SelectItem>
+                    <SelectItem value="REVIEW">Revisión</SelectItem>
+                    <SelectItem value="DRAFT">Borrador</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Estado inicial del proyecto
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

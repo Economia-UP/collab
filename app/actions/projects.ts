@@ -33,7 +33,7 @@ export async function createProject(data: {
       programmingLangs: data.programmingLangs,
       requiredSkills: data.requiredSkills,
       visibility: data.visibility,
-      status: data.status || "DRAFT",
+      status: data.status || "PLANNING",
       ownerId: userId,
       githubRepoUrl: data.githubRepoUrl,
       overleafProjectUrl: data.overleafProjectUrl,
