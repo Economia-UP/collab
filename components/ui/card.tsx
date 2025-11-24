@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  Omit<HTMLMotionProps<"div">, "onDrag" | "onDragStart" | "onDragEnd" | "ref">
 >(({ className, ...props }, ref) => (
   <motion.div
     ref={ref}
@@ -16,7 +16,7 @@ const Card = React.forwardRef<
       className
     )}
     whileHover={{ y: -4 }}
-    transition={{ duration: 0.2, ease: "easeOut" }}
+    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }}
     {...props}
   />
 ));
