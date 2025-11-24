@@ -8,11 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Project, ProjectMember } from "@prisma/client";
+import { Project, ProjectMember, ProjectStatus } from "@prisma/client";
 import { Github, FileText } from "lucide-react";
 import Link from "next/link";
 import { GitHubRepoCard } from "@/components/github-repo-card";
 import { OverleafProjectCard } from "@/components/overleaf-project-card";
+import { changeProjectStatus } from "@/app/actions/projects";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
 
 interface ProjectOverviewProps {
   project: Project & {
@@ -46,6 +57,48 @@ export function ProjectOverview({
   isAdmin,
   currentUserId,
 }: ProjectOverviewProps) {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<ProjectStatus>(project.status);
+
+  const handleStatusChange = async (newStatus: ProjectStatus) => {
+    if (!isOwner && !isAdmin) return;
+    
+    try {
+      setIsUpdating(true);
+      await changeProjectStatus(project.id, newStatus);
+      setCurrentStatus(newStatus);
+      toast({
+        title: "Estado actualizado",
+        description: `El proyecto ahora está en estado: ${getStatusLabel(newStatus)}`,
+      });
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo actualizar el estado",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const getStatusLabel = (status: ProjectStatus) => {
+    const labels: Record<ProjectStatus, string> = {
+      DRAFT: "Borrador",
+      PLANNING: "Planificación",
+      DATA_COLLECTION: "Recolección de Datos",
+      ANALYSIS: "Análisis",
+      WRITING: "Escritura",
+      REVIEW: "Revisión",
+      COMPLETED: "Completado",
+      ARCHIVED: "Archivado",
+    };
+    return labels[status];
+  };
+
   return (
     <div className="space-y-6">
       {/* Description */}
@@ -80,8 +133,35 @@ export function ProjectOverview({
             <div>
               <span className="text-sm font-medium text-muted-foreground">Estado:</span>
               <div className="mt-1">
-                <StatusBadge status={project.status} />
+                {(isOwner || isAdmin) ? (
+                  <Select
+                    value={currentStatus}
+                    onValueChange={(value) => handleStatusChange(value as ProjectStatus)}
+                    disabled={isUpdating}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DRAFT">Borrador</SelectItem>
+                      <SelectItem value="PLANNING">Planificación</SelectItem>
+                      <SelectItem value="DATA_COLLECTION">Recolección de Datos</SelectItem>
+                      <SelectItem value="ANALYSIS">Análisis</SelectItem>
+                      <SelectItem value="WRITING">Escritura</SelectItem>
+                      <SelectItem value="REVIEW">Revisión</SelectItem>
+                      <SelectItem value="COMPLETED">Completado</SelectItem>
+                      <SelectItem value="ARCHIVED">Archivado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <StatusBadge status={project.status} />
+                )}
               </div>
+              {(isOwner || isAdmin) && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Cambia el estado para que el proyecto aparezca en la lista pública
+                </p>
+              )}
             </div>
             <div>
               <span className="text-sm font-medium text-muted-foreground">Visibilidad:</span>
